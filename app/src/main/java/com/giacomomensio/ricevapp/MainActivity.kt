@@ -1,13 +1,19 @@
 package com.giacomomensio.ricevapp
 
+import android.app.DownloadManager
+import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.URLUtil
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
@@ -87,10 +93,27 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
-            webView.visibility = View.INVISIBLE
-            saveCredentialsCheckbox.visibility = View.INVISIBLE
-            disclaimerContainer.visibility = View.INVISIBLE
-            authenticateApp()
+            val intent = intent
+            if (intent != null && intent.action == Intent.ACTION_VIEW && intent.data != null) {
+                // App is launched from a link
+                startApp(intent.dataString)
+            } else {
+                // Normal app start
+                webView.visibility = View.INVISIBLE
+                saveCredentialsCheckbox.visibility = View.INVISIBLE
+                disclaimerContainer.visibility = View.INVISIBLE
+                authenticateApp()
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent) // Update the activity's intent
+        if (intent != null && intent.action == Intent.ACTION_VIEW && intent.data != null) {
+            intent.dataString?.let {
+                webView.loadUrl(it)
+            }
         }
     }
 
@@ -186,6 +209,21 @@ class MainActivity : AppCompatActivity() {
         webView.settings.useWideViewPort = true
         webView.addJavascriptInterface(WebAppInterface(), "Android")
 
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
+            val request = DownloadManager.Request(Uri.parse(url))
+            request.setMimeType(mimetype)
+            val cookies = CookieManager.getInstance().getCookie(url)
+            request.addRequestHeader("Cookie", cookies)
+            request.addRequestHeader("User-Agent", userAgent)
+            request.setDescription("Downloading file...")
+            request.setTitle(URLUtil.guessFileName(url, contentDisposition, mimetype))
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(url, contentDisposition, mimetype))
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            downloadManager.enqueue(request)
+            Toast.makeText(applicationContext, "Download in corso...", Toast.LENGTH_LONG).show()
+        }
+
         webView.webChromeClient = object : WebChromeClient() {
             override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
                 AlertDialog.Builder(this@MainActivity)
@@ -206,7 +244,21 @@ class MainActivity : AppCompatActivity() {
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false
+                val url = request?.url
+                if (url != null) {
+                    val host = url.host
+                    if ("ivaservizi.agenziaentrate.gov.it" == host || "idserver.servizicie.interno.gov.it" == host) {
+                        return false // Don't override, let WebView load
+                    }
+                }
+                // For any other host, or if url is null, try to launch an external app
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, url)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    // Could not handle the url
+                }
+                return true // Prevent WebView from loading the URL
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -267,12 +319,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startApp() {
+    private fun startApp(url: String? = null) {
         webView.visibility = View.VISIBLE
         if (!sharedPreferences.getBoolean(DISCLAIMER_DISMISSED_KEY, false)) {
             disclaimerContainer.visibility = View.VISIBLE
         }
-        webView.loadUrl(HOME_PAGE_URL)
+        webView.loadUrl(url ?: HOME_PAGE_URL)
     }
 
     override fun onStop() {
@@ -293,7 +345,7 @@ class MainActivity : AppCompatActivity() {
                 } 
                 return !!doc.getElementById('username'); 
             })(); 
-        """ 
+        """
         webView.evaluateJavascript(jsCheckLogin) { result ->
             callback(result == "true")
         }
@@ -317,7 +369,7 @@ class MainActivity : AppCompatActivity() {
                     if(doc.getElementById('password')) { doc.getElementById('password').value = '$savedPassword'; } 
                     if(doc.getElementById('pin')) { doc.getElementById('pin').value = '$savedPin'; } 
                 })(); 
-            """ 
+            """
             webView.post { webView.evaluateJavascript(jsSetCredentials, null) }
         }
     }
