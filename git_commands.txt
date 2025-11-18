@@ -1,0 +1,20 @@
+# Git Commands for your project
+
+# This file is for your notes and is not used by the app.
+
+## To save your changes to GitHub:
+# 1. Stage your changes
+git add .
+
+# 2. Commit your changes with a message
+git commit -m "Your message about the changes"
+
+# 3. Push your changes to GitHub
+git push origin main
+
+
+## To get the latest changes from GitHub:
+git pull origin main
+
+## To see the status of your changes:
+git status
