@@ -31,12 +31,15 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import android.content.res.Configuration
+import android.view.LayoutInflater
+import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var saveCredentialsCheckbox: CheckBox
-    private lateinit var disclaimerContainer: ConstraintLayout
+    private lateinit var disclaimerContainer: View
     private lateinit var sharedPreferences: SharedPreferences
 
     private var justLoggedIn = false
@@ -50,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private val NONAUTH_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline/nonauth.html"
     private val LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/web/guest/home"
     private val ALT_LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/home"
+    private val LOGIN_INFO_DISMISSED_KEY = "LOGIN_INFO_DISMISSED_KEY"
 
 
     inner class WebAppInterface {
@@ -122,11 +126,46 @@ class MainActivity : AppCompatActivity() {
         webView.saveState(outState)
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val url = webView.url
+        val isLoginPageUrl = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL
+
+        val js = if (isLoginPageUrl) {
+            """
+            (function() {
+                var viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                }
+            })();
+            """
+        } else {
+            """
+            (function() {
+                var viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                    setTimeout(function() {
+                        if (window.innerWidth < 600) {
+                            viewport.setAttribute('content', 'width=600');
+                        }
+                    }, 300);
+                }
+            })();
+            """
+        }
+        webView.evaluateJavascript(js, null)
+    }
+
     private fun authenticateApp() {
         val biometricManager = BiometricManager.from(this)
         when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)) {
             BiometricManager.BIOMETRIC_SUCCESS -> showBiometricPrompt()
-            else -> startApp()
+            else -> {
+                showLoginInfoPopup()
+                startApp()
+            }
         }
     }
 
@@ -136,6 +175,7 @@ class MainActivity : AppCompatActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
+                    showLoginInfoPopup()
                     startApp()
                 }
 
@@ -159,6 +199,36 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         biometricPrompt.authenticate(promptInfo)
+    }
+
+    private fun showLoginInfoPopup() {
+        if (sharedPreferences.getBoolean(LOGIN_INFO_DISMISSED_KEY, false)) {
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        val inflater = LayoutInflater.from(this)
+        val dialogView = inflater.inflate(R.layout.dialog_login_info, null)
+        builder.setView(dialogView)
+
+        val dialog = builder.create()
+
+        val dontShowAgainCheckbox = dialogView.findViewById<CheckBox>(R.id.dont_show_again_checkbox)
+        val messageTextView = dialogView.findViewById<TextView>(R.id.login_info_message)
+        val okButton = dialogView.findViewById<Button>(R.id.dialog_button_ok)
+
+        messageTextView.text = "Il login è possibile solo con credenziali Fisconline/Entratel, con SPID sto indagando se sarà possibile, per il momento non funziona.\n\nCon CIE non è possibile essendo un'app non ufficiale e con CNS non ho modo di provare non avendola.\n\nSi possono salvare localmente le credenziali Fisconline/Entratel per un accesso più rapido tramite l'apposita funzione che si trova in alto sulla pagina di Login."
+
+        okButton.setOnClickListener {
+            if (dontShowAgainCheckbox.isChecked) {
+                sharedPreferences.edit().putBoolean(LOGIN_INFO_DISMISSED_KEY, true).apply()
+            }
+            dialog.dismiss()
+        }
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.setCancelable(false)
+        dialog.show()
     }
 
     private fun setupApp() {
@@ -211,14 +281,25 @@ class MainActivity : AppCompatActivity() {
 
         webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
             val request = DownloadManager.Request(Uri.parse(url))
-            request.setMimeType(mimetype)
+            val filename = URLUtil.guessFileName(url, contentDisposition, mimetype)
+            
+            // Improved logic to fix .bin extension
+            var finalFilename = filename
+            if (finalFilename.endsWith(".bin", ignoreCase = true)) {
+               finalFilename = finalFilename.dropLast(4) + ".pdf"
+            }
+            if (!finalFilename.endsWith(".pdf", ignoreCase = true)) {
+               finalFilename += ".pdf"
+            }
+
+            request.setMimeType("application/pdf") // Force PDF mime type
             val cookies = CookieManager.getInstance().getCookie(url)
             request.addRequestHeader("Cookie", cookies)
             request.addRequestHeader("User-Agent", userAgent)
             request.setDescription("Downloading file...")
-            request.setTitle(URLUtil.guessFileName(url, contentDisposition, mimetype))
+            request.setTitle(finalFilename)
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(url, contentDisposition, mimetype))
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, finalFilename)
             val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             downloadManager.enqueue(request)
             Toast.makeText(applicationContext, "Download in corso...", Toast.LENGTH_LONG).show()
@@ -271,8 +352,11 @@ class MainActivity : AppCompatActivity() {
 
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL
 
+                if (!isLoginPageUrl) {
+                    view?.evaluateJavascript("""if (window.innerWidth < 600) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=600'); }""", null)
+                }
+
                 if (isLoginPageUrl) {
-                    view?.evaluateJavascript("""if (window.innerWidth < 768) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=768'); }""", null)
                     saveCredentialsCheckbox.visibility = View.VISIBLE
                     val jsLoginButtonListener = """ 
                         (function() { 
@@ -296,7 +380,6 @@ class MainActivity : AppCompatActivity() {
                     """
                     view?.evaluateJavascript(jsLoginButtonListener, null)
                 } else {
-                    view?.evaluateJavascript("""if (window.innerWidth < 600) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=600'); }""", null)
                     saveCredentialsCheckbox.visibility = View.GONE
                 }
 

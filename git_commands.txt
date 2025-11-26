@@ -18,3 +18,7 @@ git pull origin main
 
 ## To see the status of your changes:
 git status
+
+## To restore from GitHub
+git restore .
+git clean -fd
