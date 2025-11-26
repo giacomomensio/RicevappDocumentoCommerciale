@@ -34,6 +34,7 @@ import androidx.security.crypto.MasterKeys
 import android.content.res.Configuration
 import android.view.LayoutInflater
 import android.widget.TextView
+import com.google.android.material.color.DynamicColors
 
 class MainActivity : AppCompatActivity() {
 
@@ -77,6 +78,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -104,8 +106,8 @@ class MainActivity : AppCompatActivity() {
             } else {
                 // Normal app start
                 webView.visibility = View.INVISIBLE
-                saveCredentialsCheckbox.visibility = View.INVISIBLE
-                disclaimerContainer.visibility = View.INVISIBLE
+                saveCredentialsCheckbox.visibility = View.GONE // Changed to GONE to avoid reserving space
+                disclaimerContainer.visibility = View.GONE // Changed to GONE to avoid reserving space
                 authenticateApp()
             }
         }
@@ -406,6 +408,8 @@ class MainActivity : AppCompatActivity() {
         webView.visibility = View.VISIBLE
         if (!sharedPreferences.getBoolean(DISCLAIMER_DISMISSED_KEY, false)) {
             disclaimerContainer.visibility = View.VISIBLE
+        } else {
+            disclaimerContainer.visibility = View.GONE
         }
         webView.loadUrl(url ?: HOME_PAGE_URL)
     }
