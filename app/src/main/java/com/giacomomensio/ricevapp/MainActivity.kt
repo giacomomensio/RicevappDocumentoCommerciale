@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         val messageTextView = dialogView.findViewById<TextView>(R.id.login_info_message)
         val okButton = dialogView.findViewById<Button>(R.id.dialog_button_ok)
 
-        messageTextView.text = "Il login è possibile solo con credenziali Fisconline/Entratel, con SPID sto indagando se sarà possibile, per il momento non funziona.\n\nCon CIE non è possibile essendo un'app non ufficiale e con CNS non ho modo di provare non avendola.\n\nSi possono salvare localmente le credenziali Fisconline/Entratel per un accesso più rapido tramite l'apposita funzione che si trova in alto sulla pagina di Login."
+        messageTextView.text = "Il login è possibile solo con credenziali Fisconline/Entratel, con SPID sto indagando se sarà possibile, per il momento porta sul browser web.\n\nCon CIE non è possibile essendo un'app non ufficiale e con CNS non ho modo di provare non avendola.\n\nSi possono salvare localmente le credenziali Fisconline/Entratel per un accesso più rapido tramite l'apposita funzione che si trova in alto sulla pagina di Login."
 
         okButton.setOnClickListener {
             if (dontShowAgainCheckbox.isChecked) {
