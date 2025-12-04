@@ -22,3 +22,19 @@ git status
 ## To restore from GitHub
 git restore .
 git clean -fd
+
+## Release Commands (for F-Droid)
+# 1. Add all changes (including Fastlane)
+git add .
+
+# 2. Commit
+git commit -m "v1.1.3: Add Fastlane metadata and update version"
+
+# 3. Create Tag
+git tag v1.1.3
+
+# 4. Push Code
+git push origin main
+
+# 5. Push Tags
+git push origin --tags
