@@ -149,8 +149,8 @@ class MainActivity : AppCompatActivity() {
                 if (viewport) {
                     viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
                     setTimeout(function() {
-                        if (window.innerWidth < 600) {
-                            viewport.setAttribute('content', 'width=600');
+                        if (window.innerWidth < 590) {
+                            viewport.setAttribute('content', 'width=590');
                         }
                     }, 300);
                 }
@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         val messageTextView = dialogView.findViewById<TextView>(R.id.login_info_message)
         val okButton = dialogView.findViewById<Button>(R.id.dialog_button_ok)
 
-        messageTextView.text = "Il login è possibile solo con credenziali Fisconline/Entratel, con SPID sto indagando se sarà possibile, per il momento porta sul browser web.\n\nCon CIE non è possibile essendo un'app non ufficiale e con CNS non ho modo di provare non avendola.\n\nSi possono salvare localmente le credenziali Fisconline/Entratel per un accesso più rapido tramite l'apposita funzione che si trova in alto sulla pagina di Login."
+        messageTextView.text = "Il login è possibile con credenziali Fisconline/Entratel.\n\nL'accesso con SPID reindirizza al browser esterno.\n\nL'accesso con CIE funziona inserendo manualmente le credenziali, ma attenzione: i pulsanti relativi potrebbero apparire solo ruotando il telefono in orizzontale.\n\nL'accesso con CNS non è stato testato.\n\nÈ possibile salvare le credenziali Fisconline/Entratel per un accesso rapido usando la funzione in alto."
 
         okButton.setOnClickListener {
             if (dontShowAgainCheckbox.isChecked) {
