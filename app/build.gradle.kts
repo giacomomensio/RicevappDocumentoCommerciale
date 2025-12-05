@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.giacomomensio.ricevapp"
-    compileSdk = 34
+    compileSdk = 35
 
     signingConfigs {
         create("release") {
@@ -30,9 +30,9 @@ android {
     defaultConfig {
         applicationId = "com.giacomomensio.ricevapp"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 6
-        versionName = "1.2"
+        targetSdk = 35
+        versionCode = 7
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
