@@ -15,10 +15,11 @@ L'applicazione offre all'utente la possibilità di salvare le proprie credenzial
 *   **Sicurezza:** I dati vengono crittografati utilizzando gli standard di sicurezza Android (`EncryptedSharedPreferences` e Android Keystore System), rendendoli inaccessibili ad altre applicazioni o ad attacchi esterni.
 *   **Nessuna trasmissione:** Le credenziali **NON** vengono mai inviate allo sviluppatore, né a server di terze parti, né salvate su cloud. Esse vengono utilizzate dall'app esclusivamente per compilare automaticamente i campi di login sulla pagina ufficiale dell'Agenzia delle Entrate visualizzata all'interno dell'app.
 
-#### B. Dati Biometrici
-L'applicazione utilizza i sensori biometrici del dispositivo (impronta digitale o riconoscimento facciale) per proteggere l'accesso all'applicazione stessa.
-*   L'applicazione **non raccoglie, non memorizza e non ha accesso** ai dati biometrici dell'utente (l'immagine dell'impronta o del volto).
-*   L'autenticazione viene gestita interamente dal sistema operativo Android, che comunica all'applicazione solo l'esito (Successo/Fallimento).
+#### B. Protezione dell'Accesso (Biometria e PIN)
+L'applicazione utilizza le funzionalità di sicurezza del dispositivo per proteggere l'accesso all'applicazione stessa e impedire l'uso non autorizzato delle credenziali salvate.
+*   **Metodi di sblocco:** L'app può utilizzare sensori biometrici (impronta digitale, riconoscimento facciale) oppure le credenziali di blocco schermo del dispositivo (PIN, sequenza, password), a seconda di come l'utente ha configurato la sicurezza del proprio telefono.
+*   **Privacy:** L'applicazione **non raccoglie, non memorizza e non ha accesso** ai dati biometrici (immagine del volto/impronta) né al PIN o sequenza di sblocco del dispositivo.
+*   **Funzionamento:** L'autenticazione viene gestita interamente dal sistema operativo Android, che comunica all'applicazione solo l'esito (Successo/Fallimento).
 
 ### 3. Navigazione e Dati di Rete
 L'applicazione visualizza direttamente il sito web dell'Agenzia delle Entrate. Qualsiasi dato inserito durante la navigazione (es. dati delle fatture, importi, codici fiscali) viene trasmesso direttamente dal dispositivo dell'utente ai server dell'Agenzia delle Entrate, esattamente come avverrebbe utilizzando un normale browser (Chrome, Firefox). Lo sviluppatore dell'app non ha accesso a questi dati.

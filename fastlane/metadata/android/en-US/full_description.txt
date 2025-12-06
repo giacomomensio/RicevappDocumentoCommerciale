@@ -4,20 +4,18 @@ Are you a craftsman, merchant, or professional who needs to issue a "Documento C
 
 That's exactly why I developed Ricevapp Documento Commerciale. I created it primarily for myself: I needed a quick, cost-free solution for accessing the service and issuing tax receipts.
 
-**Your Free Solution for Tax Receipts**
-
+Your Free Solution for Tax Receipts
 Ricevapp is a third-party web-app that solves a practical problem: your need for instant access, every time, without paying for subscriptions:
 
-• **Maximum Access Speed:** The app gets you to the online commercial document procedure as efficiently as possible, saving you valuable time. If you wish, you can save your Fisconline/Entratel credentials exclusively locally on your device to speed up the entire login process.
+• Maximum Access Speed: The app gets you to the online commercial document procedure as efficiently as possible, saving you valuable time. If you wish, you can save your Fisconline/Entratel credentials exclusively locally on your device to speed up the entire login process.
 
-• **Protected by Biometrics:** To ensure privacy, app access is protected by your device's biometrics (fingerprint or face recognition) at every launch. This prevents unauthorized access to your saved data.
+• Protected and Compatible Access: To ensure privacy, app access is protected at every launch. It uses the unlock method set on your device (such as fingerprint, face recognition, PIN, or pattern). This prevents unauthorized access to your saved data. Note: The unlock method is only requested if you have set one up in your device's security settings.
 
-• **Free Forever:** Forget the costs of a cash register or subscription-based software services. This app is and will always remain completely free.
+• Free Forever: Forget the costs of a cash register or subscription-based software services. This app is and will always remain completely free.
 
-• **Designed by a Worker for Workers:** Developed by a craftsman who understands the need for simple, effective, and, above all, free tax tools.
+• Designed by a Worker for Workers: Developed by a craftsman who understands the need for simple, effective, and, above all, free tax tools.
 
-⚠️ **Important: Mandatory Disclaimer**
-
+⚠️ Important: Mandatory Disclaimer
 Ricevapp Documento Commerciale is a third-party application and is in no way affiliated with or supported by the "Agenzia delle Entrate" (Italian Revenue Agency). The app solely provides facilitated access to the publicly available "Documento Commerciale Online" service.
 
 Download Ricevapp now and make accessing your online tax service faster and more secure!

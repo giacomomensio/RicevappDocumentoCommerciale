@@ -197,7 +197,7 @@ class MainActivity : AppCompatActivity() {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Autenticazione richiesta")
             .setSubtitle("Sblocca per accedere all'app")
-            .setNegativeButtonText("Annulla")
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
             .build()
 
         biometricPrompt.authenticate(promptInfo)
@@ -367,17 +367,25 @@ class MainActivity : AppCompatActivity() {
                             if (iframe) { 
                                 try { doc = iframe.contentDocument; } catch(e) { return; } 
                             } 
-                            const loginButton = doc.getElementById('login-button'); 
-                            if (loginButton) { 
-                                loginButton.addEventListener('click', function() { 
-                                    const uField = doc.getElementById('username'); 
-                                    const pField = doc.getElementById('password'); 
-                                    const pinField = doc.getElementById('pin'); 
-                                    if (uField && pField && pinField) { 
-                                        Android.onLoginButtonClick(uField.value, pField.value, pinField.value);
-                                    } 
-                                }); 
-                            } 
+                            
+                            if (doc.ricevappListenerAttached) return;
+                            doc.ricevappListenerAttached = true;
+                            
+                            doc.addEventListener('click', function(e) { 
+                                let target = e.target;
+                                while (target && target !== doc) {
+                                    if (target.id === 'login-button') {
+                                        const uField = doc.getElementById('username'); 
+                                        const pField = doc.getElementById('password'); 
+                                        const pinField = doc.getElementById('pin'); 
+                                        if (uField && pField && pinField) { 
+                                            Android.onLoginButtonClick(uField.value, pField.value, pinField.value);
+                                        } 
+                                        break;
+                                    }
+                                    target = target.parentNode;
+                                }
+                            }); 
                         })(); 
                     """
                     view?.evaluateJavascript(jsLoginButtonListener, null)

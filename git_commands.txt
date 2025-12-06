@@ -28,7 +28,7 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.2.4: Type text here"
+git commit -m "v1.2.4: Extended compatibility SDK 23"
 
 # 3. Create Tag
 git tag v1.2.4
