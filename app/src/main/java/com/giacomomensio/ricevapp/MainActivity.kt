@@ -149,8 +149,8 @@ class MainActivity : AppCompatActivity() {
                 if (viewport) {
                     viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
                     setTimeout(function() {
-                        if (window.innerWidth < 590) {
-                            viewport.setAttribute('content', 'width=590');
+                        if (window.innerWidth < 585) {
+                            viewport.setAttribute('content', 'width=585');
                         }
                     }, 300);
                 }
@@ -355,7 +355,7 @@ class MainActivity : AppCompatActivity() {
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL
 
                 if (!isLoginPageUrl) {
-                    view?.evaluateJavascript("""if (window.innerWidth < 600) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=600'); }""", null)
+                    view?.evaluateJavascript("""if (window.innerWidth < 585) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=585'); }""", null)
                 }
 
                 if (isLoginPageUrl) {
