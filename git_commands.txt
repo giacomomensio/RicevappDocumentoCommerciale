@@ -28,10 +28,10 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.2.4: Extended compatibility SDK 23"
+git commit -m "v1.3: Major Release - Extended compatibility SDK 23 & PIN Support"
 
 # 3. Create Tag
-git tag v1.2.4
+git tag v1.3
 
 # 4. Push Code
 git push origin main
