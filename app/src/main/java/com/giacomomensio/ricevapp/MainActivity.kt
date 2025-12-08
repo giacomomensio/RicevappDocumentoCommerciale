@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         val messageTextView = dialogView.findViewById<TextView>(R.id.login_info_message)
         val okButton = dialogView.findViewById<Button>(R.id.dialog_button_ok)
 
-        messageTextView.text = "Il login è possibile con credenziali Fisconline/Entratel.\n\nL'accesso con SPID reindirizza al browser esterno.\n\nL'accesso con CIE funziona inserendo manualmente le credenziali, ma attenzione: i pulsanti relativi potrebbero apparire solo ruotando il telefono in orizzontale.\n\nL'accesso con CNS non è stato testato.\n\nÈ possibile salvare le credenziali Fisconline/Entratel per un accesso rapido usando la funzione in alto."
+        messageTextView.text = "Il metodo più rapido per il login è tramite credenziali Fisconline/Entratel: è l'unico che consente di salvare i dati per gli accessi futuri usando la funzione in alto.\n\nL'accesso con SPID o CIE funziona inserendo manualmente le credenziali (i link rapidi alle relative app non sono supportati).\n\nL'accesso con CNS non è stato testato."
 
         okButton.setOnClickListener {
             if (dontShowAgainCheckbox.isChecked) {
@@ -330,7 +330,27 @@ class MainActivity : AppCompatActivity() {
                 val url = request?.url
                 if (url != null) {
                     val host = url.host
-                    if ("ivaservizi.agenziaentrate.gov.it" == host || "idserver.servizicie.interno.gov.it" == host) {
+                    
+                    // List of allowed domains
+                    val allowedDomains = listOf(
+                        "ivaservizi.agenziaentrate.gov.it",
+                        "idserver.servizicie.interno.gov.it",
+                        "sogei.it", "lepida.it", "register.it", "namirial.it", 
+                        "intesigroup.com", "teamsystem.com", "infocamere.it", 
+                        "infocert.it", "poste.it", "aruba.it", "sieltecloud.it", 
+                        "eht.eu", "tim.it"
+                    )
+
+                    // Check if the host ends with any of the allowed domains
+                    val isAllowed = if (host != null) {
+                        allowedDomains.any { domain -> 
+                            host.equals(domain, ignoreCase = true) || host.endsWith(".$domain", ignoreCase = true)
+                        }
+                    } else {
+                        false
+                    }
+
+                    if (isAllowed) {
                         return false // Don't override, let WebView load
                     }
                 }
