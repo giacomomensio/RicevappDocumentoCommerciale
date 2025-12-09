@@ -1,10 +1,13 @@
 package com.giacomomensio.ricevapp
 
+import android.Manifest
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.View
@@ -25,7 +28,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -44,6 +47,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
 
     private var justLoggedIn = false
+
+    private var downloadUrl: String? = null
+    private var downloadUserAgent: String? = null
+    private var downloadContentDisposition: String? = null
+    private var downloadMimetype: String? = null
+    private var isAwaitingPermissionResult = false
+
+    private val STORAGE_PERMISSION_CODE = 1000
 
     private val USERNAME_KEY = "USERNAME_KEY"
     private val PASSWORD_KEY = "PASSWORD_KEY"
@@ -282,29 +293,7 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(WebAppInterface(), "Android")
 
         webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
-            val request = DownloadManager.Request(Uri.parse(url))
-            val filename = URLUtil.guessFileName(url, contentDisposition, mimetype)
-            
-            // Improved logic to fix .bin extension
-            var finalFilename = filename
-            if (finalFilename.endsWith(".bin", ignoreCase = true)) {
-               finalFilename = finalFilename.dropLast(4) + ".pdf"
-            }
-            if (!finalFilename.endsWith(".pdf", ignoreCase = true)) {
-               finalFilename += ".pdf"
-            }
-
-            request.setMimeType("application/pdf") // Force PDF mime type
-            val cookies = CookieManager.getInstance().getCookie(url)
-            request.addRequestHeader("Cookie", cookies)
-            request.addRequestHeader("User-Agent", userAgent)
-            request.setDescription("Downloading file...")
-            request.setTitle(finalFilename)
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, finalFilename)
-            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            downloadManager.enqueue(request)
-            Toast.makeText(applicationContext, "Download in corso...", Toast.LENGTH_LONG).show()
+            handleDownload(url, userAgent, contentDisposition, mimetype)
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -428,6 +417,71 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun handleDownload(url: String, userAgent: String, contentDisposition: String, mimetype: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                isAwaitingPermissionResult = true
+                //permission denied, request it
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSION_CODE)
+                //store download data
+                downloadUrl = url
+                downloadUserAgent = userAgent
+                downloadContentDisposition = contentDisposition
+                downloadMimetype = mimetype
+            } else {
+                //permission already granted, handle download
+                if (!isAwaitingPermissionResult) {
+                    downloadFile(url, userAgent, contentDisposition, mimetype)
+                }
+            }
+        } else {
+            //system OS is less than Marshmallow, handle download
+            downloadFile(url, userAgent, contentDisposition, mimetype)
+        }
+    }
+
+    private fun downloadFile(url: String, userAgent: String, contentDisposition: String, mimetype: String) {
+        val request = DownloadManager.Request(Uri.parse(url))
+        val filename = URLUtil.guessFileName(url, contentDisposition, mimetype)
+
+        // Improved logic to fix .bin extension
+        var finalFilename = filename
+        if (finalFilename.endsWith(".bin", ignoreCase = true)) {
+            finalFilename = finalFilename.dropLast(4) + ".pdf"
+        }
+        if (!finalFilename.endsWith(".pdf", ignoreCase = true)) {
+            finalFilename += ".pdf"
+        }
+
+        request.setMimeType("application/pdf") // Force PDF mime type
+        val cookies = CookieManager.getInstance().getCookie(url)
+        request.addRequestHeader("Cookie", cookies)
+        request.addRequestHeader("User-Agent", userAgent)
+        request.setDescription("Downloading file...")
+        request.setTitle(finalFilename)
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, finalFilename)
+        val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        downloadManager.enqueue(request)
+        Toast.makeText(applicationContext, "Download in corso...", Toast.LENGTH_LONG).show()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            isAwaitingPermissionResult = false
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                //permission granted from popup, handle download
+                if(downloadUrl != null) {
+                    downloadFile(downloadUrl!!, downloadUserAgent!!, downloadContentDisposition!!, downloadMimetype!!)
+                }
+            } else {
+                //permission denied from popup, show error message
+                Toast.makeText(this, "Permission denied!", Toast.LENGTH_SHORT).show()
             }
         }
     }
