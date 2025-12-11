@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     private val NONAUTH_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline/nonauth.html"
     private val LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/web/guest/home"
     private val ALT_LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/home"
+    private val ALT_LOGIN_PAGE_URL_2 = "https://ivaservizi.agenziaentrate.gov.it/portale/"
     private val LOGIN_INFO_DISMISSED_KEY = "LOGIN_INFO_DISMISSED_KEY"
 
 
@@ -142,7 +143,7 @@ class MainActivity : AppCompatActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val url = webView.url
-        val isLoginPageUrl = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL
+        val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
 
         val js = if (isLoginPageUrl) {
             """
@@ -357,11 +358,11 @@ class MainActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
                 onBackPressedCallback.isEnabled = view?.canGoBack() ?: false
                 if (url == NONAUTH_URL) {
-                    view?.loadUrl(LOGIN_PAGE_URL)
+                    view?.loadUrl(ALT_LOGIN_PAGE_URL)
                     return
                 }
 
-                val isLoginPageUrl = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL
+                val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
 
                 if (!isLoginPageUrl) {
                     view?.evaluateJavascript("""if (window.innerWidth < 585) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=585'); }""", null)
