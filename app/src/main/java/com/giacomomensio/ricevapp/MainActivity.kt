@@ -423,24 +423,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleDownload(url: String, userAgent: String, contentDisposition: String, mimetype: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // For Android 10 (API 29) and above, storage permission is not required for DownloadManager to save in public Downloads.
+            downloadFile(url, userAgent, contentDisposition, mimetype)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
                 isAwaitingPermissionResult = true
-                //permission denied, request it
+                // Permission denied, request it.
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSION_CODE)
-                //store download data
+                // Store download data to use after permission is granted.
                 downloadUrl = url
                 downloadUserAgent = userAgent
                 downloadContentDisposition = contentDisposition
                 downloadMimetype = mimetype
             } else {
-                //permission already granted, handle download
+                // Permission already granted, handle download.
                 if (!isAwaitingPermissionResult) {
                     downloadFile(url, userAgent, contentDisposition, mimetype)
                 }
             }
         } else {
-            //system OS is less than Marshmallow, handle download
+            // System OS is less than Marshmallow, no runtime permission needed.
             downloadFile(url, userAgent, contentDisposition, mimetype)
         }
     }
