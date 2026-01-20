@@ -151,6 +151,11 @@ class MainActivity : AppCompatActivity() {
                 var viewport = document.querySelector('meta[name="viewport"]');
                 if (viewport) {
                     viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                    setTimeout(function() {
+                        if (window.innerWidth < 768) {
+                            viewport.setAttribute('content', 'width=768');
+                        }
+                    }, 300);
                 }
             })();
             """
@@ -364,7 +369,9 @@ class MainActivity : AppCompatActivity() {
 
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
 
-                if (!isLoginPageUrl) {
+                if (isLoginPageUrl) {
+                    view?.evaluateJavascript("""if (window.innerWidth < 768) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=768'); }""", null)
+                } else {
                     view?.evaluateJavascript("""if (window.innerWidth < 585) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=585'); }""", null)
                 }
 
