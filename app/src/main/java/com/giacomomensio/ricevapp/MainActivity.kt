@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
             insets
         }
 
@@ -156,6 +156,10 @@ class MainActivity : AppCompatActivity() {
                             viewport.setAttribute('content', 'width=768');
                         }
                     }, 300);
+                }
+                var pageContent = document.getElementById('page-content');
+                if (pageContent) {
+                    pageContent.style.zoom = 1.5;
                 }
             })();
             """
@@ -370,7 +374,21 @@ class MainActivity : AppCompatActivity() {
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
 
                 if (isLoginPageUrl) {
-                    view?.evaluateJavascript("""if (window.innerWidth < 768) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=768'); }""", null)
+                    val jsToInject = """
+                        (function() {
+                            if (window.innerWidth < 768) {
+                                var viewport = document.querySelector('meta[name="viewport"]');
+                                if (viewport) {
+                                    viewport.setAttribute('content', 'width=768');
+                                }
+                            }
+                            var pageContent = document.getElementById('page-content');
+                            if (pageContent) {
+                                pageContent.style.zoom = 1.5;
+                            }
+                        })();
+                    """
+                    view?.evaluateJavascript(jsToInject, null)
                 } else {
                     view?.evaluateJavascript("""if (window.innerWidth < 585) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=585'); }""", null)
                 }
