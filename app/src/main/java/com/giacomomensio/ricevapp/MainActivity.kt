@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 var pageContent = document.getElementById('page-content');
                 if (pageContent) {
-                    pageContent.style.zoom = 1.5;
+                    pageContent.style.zoom = 1.9;
                 }
             })();
             """
@@ -374,13 +374,35 @@ class MainActivity : AppCompatActivity() {
                             }
                             var pageContent = document.getElementById('page-content');
                             if (pageContent) {
-                                pageContent.style.zoom = 1.5;
+                                pageContent.style.zoom = 1.9;
                             }
                         })();
                     """
                     view?.evaluateJavascript(jsToInject, null)
                 } else {
                     view?.evaluateJavascript("""if (window.innerWidth < 585) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=585'); }""", null)
+                }
+
+                if (url != null && url.contains("/generazione/wizard2")) {
+                    val wizard2Js = """
+                        (function() {
+                            const interval = setInterval(function() {
+                                const table = document.getElementById('table');
+                                if (table) {
+                                    clearInterval(interval);
+                                    table.style.marginLeft = '-10px';
+                                    table.style.marginRight = '-10px';
+
+                                    const panelBody = table.querySelector('.panel-body');
+                                    if (panelBody) {
+                                        panelBody.style.paddingLeft = '0px';
+                                        panelBody.style.paddingRight = '0px';
+                                    }
+                                }
+                            }, 100);
+                        })();
+                    """
+                    view?.evaluateJavascript(wizard2Js, null)
                 }
 
                 if (isLoginPageUrl) {
