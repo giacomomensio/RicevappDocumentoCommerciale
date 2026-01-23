@@ -111,28 +111,18 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
-            val intent = intent
-            if (intent != null && intent.action == Intent.ACTION_VIEW && intent.data != null) {
-                // App is launched from a link
-                startApp(intent.dataString)
-            } else {
-                // Normal app start
-                webView.visibility = View.INVISIBLE
-                saveCredentialsCheckbox.visibility = View.GONE // Changed to GONE to avoid reserving space
-                disclaimerContainer.visibility = View.GONE // Changed to GONE to avoid reserving space
-                authenticateApp()
-            }
+            // Normal app start
+            webView.visibility = View.INVISIBLE
+            saveCredentialsCheckbox.visibility = View.GONE // Changed to GONE to avoid reserving space
+            disclaimerContainer.visibility = View.GONE // Changed to GONE to avoid reserving space
+            authenticateApp()
         }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent) // Update the activity's intent
-        if (intent != null && intent.action == Intent.ACTION_VIEW && intent.data != null) {
-            intent.dataString?.let {
-                webView.loadUrl(it)
-            }
-        }
+        // No longer handling ACTION_VIEW intents
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
