@@ -159,11 +159,6 @@ class MainActivity : AppCompatActivity() {
                 var viewport = document.querySelector('meta[name="viewport"]');
                 if (viewport) {
                     viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
-                    setTimeout(function() {
-                        if (window.innerWidth < 585) {
-                            viewport.setAttribute('content', 'width=585');
-                        }
-                    }, 300);
                 }
             })();
             """
@@ -380,7 +375,7 @@ class MainActivity : AppCompatActivity() {
                     """
                     view?.evaluateJavascript(jsToInject, null)
                 } else {
-                    view?.evaluateJavascript("""if (window.innerWidth < 585) { document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=585'); }""", null)
+                    // No longer setting viewport width to 585px
                 }
 
                 if (url != null && url.contains("/generazione/wizard2")) {
@@ -415,6 +410,15 @@ class MainActivity : AppCompatActivity() {
                                         style.type = 'text/css';
                                         style.innerHTML = '.table-widthed input[type="text"] { min-width: 60px; }';
                                         document.head.appendChild(style);
+                                    }
+
+                                    // Inject the new CSS rule for the table header
+                                    if (!document.getElementById('wizard2-style-header-fix')) {
+                                        var style2 = document.createElement('style');
+                                        style2.id = 'wizard2-style-header-fix';
+                                        style2.type = 'text/css';
+                                        style2.innerHTML = '.table-widthed thead th.txt:nth-child(3) { min-width: 210px; }';
+                                        document.head.appendChild(style2);
                                     }
                                 }
                             }, 100);
