@@ -420,6 +420,15 @@ class MainActivity : AppCompatActivity() {
                                         style2.innerHTML = '.table-widthed thead th.txt:nth-child(3) { min-width: 210px; }';
                                         document.head.appendChild(style2);
                                     }
+
+                                    // Inject the new CSS rule for the table header
+                                    if (!document.getElementById('wizard2-style-header-fix-2')) {
+                                        var style3 = document.createElement('style');
+                                        style3.id = 'wizard2-style-header-fix-2';
+                                        style3.type = 'text/css';
+                                        style3.innerHTML = '.table-widthed thead th.val:nth-child(4) { padding-left: 0px; padding-right: 0px; }';
+                                        document.head.appendChild(style3);
+                                    }
                                 }
                             }, 100);
                         })();
