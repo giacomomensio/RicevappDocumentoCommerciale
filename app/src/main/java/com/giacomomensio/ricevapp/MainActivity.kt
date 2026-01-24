@@ -388,15 +388,33 @@ class MainActivity : AppCompatActivity() {
                         (function() {
                             const interval = setInterval(function() {
                                 const table = document.getElementById('table');
-                                if (table) {
+                                const targetElement = document.getElementById('i2_2_1_r0');
+                                
+                                if (table && targetElement) {
                                     clearInterval(interval);
+                                    
+                                    // Existing working styles
                                     table.style.marginLeft = '-10px';
                                     table.style.marginRight = '-10px';
-
                                     const panelBody = table.querySelector('.panel-body');
                                     if (panelBody) {
                                         panelBody.style.paddingLeft = '0px';
                                         panelBody.style.paddingRight = '0px';
+                                    }
+
+                                    // Add class to parent TD for styling
+                                    const td = targetElement.closest('td');
+                                    if (td) {
+                                        td.classList.add('table-widthed');
+                                    }
+
+                                    // Inject the CSS rule if it doesn't exist
+                                    if (!document.getElementById('wizard2-style-fix')) {
+                                        var style = document.createElement('style');
+                                        style.id = 'wizard2-style-fix';
+                                        style.type = 'text/css';
+                                        style.innerHTML = '.table-widthed input[type="text"] { min-width: 60px; }';
+                                        document.head.appendChild(style);
                                     }
                                 }
                             }, 100);
