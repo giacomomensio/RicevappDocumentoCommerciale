@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
 
     private var justLoggedIn = false
+    private var isInitialPageLoad = true
 
     private var downloadUrl: String? = null
     private var downloadUserAgent: String? = null
@@ -72,6 +73,7 @@ class MainActivity : AppCompatActivity() {
     inner class WebAppInterface {
         @JavascriptInterface
         fun onLoginButtonClick(username: String, password: String, pin: String) {
+            justLoggedIn = true
             if (saveCredentialsCheckbox.isChecked) {
                 with(sharedPreferences.edit()) {
                     putString(USERNAME_KEY, username)
@@ -351,9 +353,17 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 onBackPressedCallback.isEnabled = view?.canGoBack() ?: false
-                if (url == NONAUTH_URL) {
-                    view?.loadUrl(ALT_LOGIN_PAGE_URL)
-                    return
+
+                if (isInitialPageLoad) {
+                    isInitialPageLoad = false
+                    val isPortalPage = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL_2
+                    if (isPortalPage) {
+                        isLoginPage { onLoginPage ->
+                            if (!onLoginPage) {
+                                view?.loadUrl(HOME_PAGE_URL)
+                            }
+                        }
+                    }
                 }
 
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
@@ -469,17 +479,53 @@ class MainActivity : AppCompatActivity() {
                     view?.evaluateJavascript(jsLoginButtonListener, null)
                 } else {
                     saveCredentialsCheckbox.visibility = View.GONE
+                    if (url != null && url.contains("/scelta-utenza-lavoro")) {
+                        val jsLogoutHandler = """ 
+                        (function() { 
+                            if (document.body.hasAttribute('data-logout-listener')) return; 
+                            document.body.setAttribute('data-logout-listener', 'true'); 
+ 
+                            const keywords = ['esci', 'logout', 'esci dal servizio']; 
+ 
+                            function isLogoutElement(element) { 
+                                if (!element) return false; 
+                                const text = (element.textContent || element.innerText || '').trim().toLowerCase(); 
+                                const href = (element.href || '').toLowerCase(); 
+ 
+                                if (keywords.some(kw => text.includes(kw))) { 
+                                    return true; 
+                                } 
+                                if (href.includes('logout')) { 
+                                    return true; 
+                                } 
+                                return false; 
+                            } 
+ 
+                            document.body.addEventListener('click', function(event) { 
+                                let target = event.target; 
+                                for (let i = 0; i < 5 && target && target !== document.body; i++, target = target.parentNode) { 
+                                    if (isLogoutElement(target)) { 
+                                        event.preventDefault(); 
+                                        event.stopPropagation(); 
+                                        window.confirm('Sei sicuro di voler uscire?'); 
+                                        return; 
+                                    } 
+                                } 
+                            }, true); 
+                        })(); 
+                    """
+                        view?.evaluateJavascript(jsLogoutHandler, null)
+                    }
                 }
 
                 if (url != null && url.startsWith("https://ivaservizi.agenziaentrate.gov.it/")) {
                     isLoginPage { onLoginPage ->
                         if (onLoginPage) {
-                            justLoggedIn = true
                             autofillCredentials(sharedPreferences)
                         } else {
                             if (justLoggedIn) {
                                 justLoggedIn = false
-                                if (url != HOME_PAGE_URL) {
+                                if (url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL_2) {
                                     view?.loadUrl(HOME_PAGE_URL)
                                 }
                             }
@@ -565,7 +611,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             disclaimerContainer.visibility = View.GONE
         }
-        webView.loadUrl(url ?: HOME_PAGE_URL)
+        webView.loadUrl(url ?: LOGIN_PAGE_URL)
     }
 
     override fun onStop() {
@@ -585,7 +631,7 @@ class MainActivity : AppCompatActivity() {
                     } 
                 } 
                 return !!doc.getElementById('username'); 
-            })(); 
+            })();
         """
         webView.evaluateJavascript(jsCheckLogin) { result ->
             callback(result == "true")
