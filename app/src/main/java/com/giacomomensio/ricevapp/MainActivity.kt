@@ -369,23 +369,28 @@ class MainActivity : AppCompatActivity() {
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
 
                 if (isLoginPageUrl) {
-                    val jsToInject = """
-                        (function() {
-                            if (window.innerWidth < 768) {
-                                var viewport = document.querySelector('meta[name="viewport"]');
-                                if (viewport) {
-                                    viewport.setAttribute('content', 'width=768');
-                                }
-                            }
-                            var pageContent = document.getElementById('page-content');
-                            if (pageContent) {
-                                pageContent.style.zoom = 1.9;
-                            }
-                        })();
-                    """
-                    view?.evaluateJavascript(jsToInject, null)
-                } else {
-                    // No longer setting viewport width to 585px
+                    isLoginPage { onLoginPage ->
+                        if (onLoginPage) {
+                            saveCredentialsCheckbox.visibility = View.VISIBLE
+                            val jsToInject = """
+                                (function() {
+                                    if (window.innerWidth < 768) {
+                                        var viewport = document.querySelector('meta[name="viewport"]');
+                                        if (viewport) {
+                                            viewport.setAttribute('content', 'width=768');
+                                        }
+                                    }
+                                    var pageContent = document.getElementById('page-content');
+                                    if (pageContent) {
+                                        pageContent.style.zoom = 1.9;
+                                    }
+                                })();
+                            """
+                            view?.evaluateJavascript(jsToInject, null)
+                        } else {
+                            saveCredentialsCheckbox.visibility = View.GONE
+                        }
+                    }
                 }
 
                 if (url != null && url.contains("/generazione/wizard2")) {
@@ -447,7 +452,6 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (isLoginPageUrl) {
-                    saveCredentialsCheckbox.visibility = View.VISIBLE
                     val jsLoginButtonListener = """ 
                         (function() { 
                             let doc = document; 
@@ -478,7 +482,6 @@ class MainActivity : AppCompatActivity() {
                     """
                     view?.evaluateJavascript(jsLoginButtonListener, null)
                 } else {
-                    saveCredentialsCheckbox.visibility = View.GONE
                     if (url != null && url.contains("/scelta-utenza-lavoro")) {
                         val jsLogoutHandler = """ 
                         (function() { 
