@@ -1,21 +1,15 @@
+DISCLAIMER IMPORTANTE E FONTE UFFICIALE
+Questa applicazione, Ricevapp Documento Commerciale, è un'app di terze parti e NON rappresenta un ente governativo. NON è affiliata, approvata o supportata in alcun modo dall'Agenzia delle Entrate italiana.
+L'app fornisce unicamente un accesso facilitato tramite WebView al servizio web pubblico "Documento Commerciale Online", la cui fonte ufficiale governativa è: https://ivaservizi.agenziaentrate.gov.it/portale/
+
 Stanco della Scomodità? Ecco Ricevapp Documento Commerciale.
-
 Sei un artigiano, un commerciante o un professionista che deve emettere un Documento Commerciale Online? Sai bene che il servizio ufficiale non ha un'app propria e che accedere e fare il login ogni volta dal browser può essere macchinoso.
-
 È proprio per questo che ho sviluppato Ricevapp Documento Commerciale. L'ho creata in primis per me stesso: avevo bisogno di una soluzione rapida per l'accesso e l'emissione della ricevuta fiscale, senza costi.
 
 La Tua Soluzione per la Ricevuta Fiscale Gratuita
 Ricevapp è una web-app di terze parti che risolve un problema pratico: il tuo bisogno di accedere subito, ogni volta, senza dover pagare abbonamenti:
-
 • Massima Velocità di Accesso: L'app ti porta alla procedura di documento commerciale online nel modo più efficiente possibile, facendoti risparmiare tempo prezioso. Se lo desideri, puoi salvare le tue credenziali Fisconline/Entratel esclusivamente in locale sul tuo dispositivo per sveltire l'intero processo di login.
-
 • Accesso Protetto e Compatibile: Per garantire la privacy, l'accesso all'app è protetto ad ogni avvio. Utilizza il metodo di sblocco impostato sul tuo dispositivo (come impronta digitale, riconoscimento facciale, PIN o sequenza). Questo impedisce l'accesso non autorizzato ai tuoi dati salvati. Nota: Il metodo di sblocco viene richiesto solo se ne hai impostato uno nelle impostazioni di sicurezza del tuo dispositivo.
-
 • Gratuita per Sempre: Dimentica i costi di un registratore di cassa o di servizi software in abbonamento. Questa app è e rimarrà completamente gratuita.
-
 • Progettata da Chi Lavora: Sviluppata da un artigiano che comprende l'esigenza di strumenti fiscali semplici, efficaci e, soprattutto, gratuiti.
-
-⚠️ Importante: Disclaimer Obbligatorio
-Ricevapp Documento Commerciale è un'applicazione di terze parti e non è in alcun modo affiliata o supportata dall'Agenzia delle Entrate. L'app fornisce esclusivamente un accesso facilitato al servizio documento commerciale online disponibile pubblicamente.
-
 Scarica subito Ricevapp e rendi più rapido e sicuro l'accesso al tuo servizio fiscale online!
