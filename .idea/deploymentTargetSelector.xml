@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-01-20T16:13:15.887211400Z">
+        <DropdownSelection timestamp="2026-02-17T16:05:41.308952400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\giaco\.android\avd\Tablet_7.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=c16071495180121" />
             </handle>
           </Target>
         </DropdownSelection>

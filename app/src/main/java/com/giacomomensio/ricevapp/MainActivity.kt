@@ -145,16 +145,25 @@ class MainActivity : AppCompatActivity() {
         val js = if (isLoginPageUrl) {
             """
             (function() {
-                if (window.innerWidth < 768) {
+                setTimeout(function() {
                     var viewport = document.querySelector('meta[name="viewport"]');
-                    if (viewport) {
-                        viewport.setAttribute('content', 'width=768');
-                    }
                     var pageContent = document.getElementById('page-content');
-                    if (pageContent) {
-                        pageContent.style.zoom = 1.9;
+                    if (window.innerWidth < 768) {
+                        if (viewport) {
+                            viewport.setAttribute('content', 'width=768');
+                        }
+                        if (pageContent) {
+                            pageContent.style.zoom = 1.9;
+                        }
+                    } else {
+                        if (viewport) {
+                            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                        }
+                        if (pageContent) {
+                            pageContent.style.zoom = 1.0;
+                        }
                     }
-                }
+                }, 300);
             })();
             """
         } else {
@@ -376,16 +385,25 @@ class MainActivity : AppCompatActivity() {
                             saveCredentialsCheckbox.visibility = View.VISIBLE
                             val jsToInject = """
                                 (function() {
-                                    if (window.innerWidth < 768) {
+                                    setTimeout(function() {
                                         var viewport = document.querySelector('meta[name="viewport"]');
-                                        if (viewport) {
-                                            viewport.setAttribute('content', 'width=768');
-                                        }
                                         var pageContent = document.getElementById('page-content');
-                                        if (pageContent) {
-                                            pageContent.style.zoom = 1.9;
+                                        if (window.innerWidth < 768) {
+                                            if (viewport) {
+                                                viewport.setAttribute('content', 'width=768');
+                                            }
+                                            if (pageContent) {
+                                                pageContent.style.zoom = 1.9;
+                                            }
+                                        } else {
+                                            if (viewport) {
+                                                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                                            }
+                                            if (pageContent) {
+                                                pageContent.style.zoom = 1.0;
+                                            }
                                         }
-                                    }
+                                    }, 300);
                                 })();
                             """
                             view?.evaluateJavascript(jsToInject, null)

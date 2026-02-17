@@ -28,10 +28,10 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.5: Added face unlock and correctly handling SPID/CIE users without a VAT ID"
+git commit -m "v1.5.1: Refined UI and SPID/CIE login fast redirects"
 
 # 3. Create Tag
-git tag v1.5
+git tag v1.5.1
 
 # 4. Push Code
 git push origin main
