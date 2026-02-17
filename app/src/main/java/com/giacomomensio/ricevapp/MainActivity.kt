@@ -83,6 +83,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        @JavascriptInterface
+        fun onExternalLoginClick() {
+            justLoggedIn = true
+        }
     }
 
     private val onBackPressedCallback = object : OnBackPressedCallback(false) {
@@ -473,6 +478,11 @@ class MainActivity : AppCompatActivity() {
                                         if (uField && pField && pinField) { 
                                             Android.onLoginButtonClick(uField.value, pField.value, pinField.value);
                                         } 
+                                        break;
+                                    }
+                                    const text = (target.textContent || target.innerText || '').toLowerCase();
+                                    if (text.includes('spid') || text.includes('cie')) {
+                                        Android.onExternalLoginClick();
                                         break;
                                     }
                                     target = target.parentNode;
