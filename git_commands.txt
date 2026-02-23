@@ -28,10 +28,10 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.5.1: Refined UI and SPID/CIE login fast redirects"
+git commit -m "v1.5.2: Ready for public release, new screenshots"
 
 # 3. Create Tag
-git tag v1.5.1
+git tag v1.5.2
 
 # 4. Push Code
 git push origin main
