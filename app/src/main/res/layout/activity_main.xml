@@ -29,7 +29,7 @@
                 android:id="@+id/disclaimer_text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Ricorda: questa app è di terze parti e non è in alcun modo affiliata all'Agenzia delle Entrate."
+                android:text="Ricorda: questa app è di terze parti e non è in alcun modo affiliata all\'Agenzia delle Entrate."
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp"
                 android:layout_marginEnd="8dp"
@@ -66,12 +66,71 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/fast_track_banner_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/save_credentials_checkbox"
+        app:strokeWidth="0dp"
+        tools:visibility="visible">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/fast_track_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Sei sulla pagina intermedia del portale."
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/fast_track_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/skip_intermediate_page_checkbox" />
+
+            <Button
+                android:id="@+id/fast_track_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VAI A DOCUMENTO COMMERCIALE"
+                android:textColor="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/skip_intermediate_page_checkbox"/>
+
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/skip_intermediate_page_checkbox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Salta sempre questa pagina dopo il login."
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fast_track_button"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <WebView
         android:id="@+id/webview"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@+id/save_credentials_checkbox"
+        app:layout_constraintTop_toBottomOf="@+id/fast_track_banner_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />

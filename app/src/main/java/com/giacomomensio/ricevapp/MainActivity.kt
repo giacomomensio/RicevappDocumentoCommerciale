@@ -45,6 +45,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveCredentialsCheckbox: CheckBox
     private lateinit var disclaimerContainer: View
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var fastTrackBannerContainer: View
+    private lateinit var fastTrackButton: Button
+    private lateinit var skipIntermediatePageCheckbox: CheckBox
 
     private var justLoggedIn = false
     private var isInitialPageLoad = true
@@ -62,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     private val PIN_KEY = "PIN_KEY"
     private val SHOULD_SAVE_KEY = "SHOULD_SAVE_KEY"
     private val DISCLAIMER_DISMISSED_KEY = "DISCLAIMER_DISMISSED_KEY"
+    private val SKIP_INTERMEDIATE_PAGE_KEY = "SKIP_INTERMEDIATE_PAGE_KEY"
     private val HOME_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline/#/home"
     private val NONAUTH_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline/nonauth.html"
     private val LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/web/guest/home"
@@ -112,6 +116,9 @@ class MainActivity : AppCompatActivity() {
         webView = findViewById(R.id.webview)
         saveCredentialsCheckbox = findViewById(R.id.save_credentials_checkbox)
         disclaimerContainer = findViewById(R.id.disclaimer_container)
+        fastTrackBannerContainer = findViewById(R.id.fast_track_banner_container)
+        fastTrackButton = findViewById(R.id.fast_track_button)
+        skipIntermediatePageCheckbox = findViewById(R.id.skip_intermediate_page_checkbox)
 
         setupApp()
 
@@ -238,7 +245,7 @@ class MainActivity : AppCompatActivity() {
         val messageTextView = dialogView.findViewById<TextView>(R.id.login_info_message)
         val okButton = dialogView.findViewById<Button>(R.id.dialog_button_ok)
 
-        messageTextView.text = "Il metodo più rapido per il login è tramite credenziali Fisconline/Entratel: è l'unico che consente di salvare i dati per gli accessi futuri usando la funzione in alto.\n\nL'accesso con SPID o CIE funziona inserendo manualmente le credenziali (i link rapidi alle relative app non sono supportati).\n\nL'accesso con CNS non è stato testato."
+        messageTextView.text = "Il metodo più rapido per il login è tramite credenziali Fisconline/Entratel: è l'unico che consente di salvare i dati per gli accessi futuri usando la funzione in alto.\n\nL'accesso con SPID o CIE funziona inserendo manualmente le credenziali (i link rapidi alle relative app non sono supportati).\n\nL'accesso con CNS non è stato testato.\n\nNota: L'app è pensata per la velocità. Grazie alla protezione all\'avvio, non è necessario fare il logout manuale prima di chiuderla."
 
         okButton.setOnClickListener {
             if (dontShowAgainCheckbox.isChecked) {
@@ -295,6 +302,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        skipIntermediatePageCheckbox.isChecked = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
+        skipIntermediatePageCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            with(sharedPreferences.edit()) {
+                putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, isChecked)
+                apply()
+            }
+        }
+
+        fastTrackButton.setOnClickListener {
+            webView.loadUrl(HOME_PAGE_URL)
+        }
+
         webView.settings.javaScriptEnabled = true
         webView.settings.loadWithOverviewMode = true
         webView.settings.useWideViewPort = true
@@ -313,6 +332,7 @@ class MainActivity : AppCompatActivity() {
                         result?.confirm()
                         CookieManager.getInstance().removeAllCookies(null)
                         CookieManager.getInstance().flush()
+                        sharedPreferences.edit().putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false).apply()
                         view?.loadUrl("https://ivaservizi.agenziaentrate.gov.it/portale/logout")
                     }
                     .setNegativeButton("No") { _, _ -> result?.cancel() }
@@ -364,6 +384,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 onBackPressedCallback.isEnabled = view?.canGoBack() ?: false
+                fastTrackBannerContainer.visibility = View.GONE
 
                 if (isInitialPageLoad) {
                     isInitialPageLoad = false
@@ -408,7 +429,9 @@ class MainActivity : AppCompatActivity() {
                             """
                             view?.evaluateJavascript(jsToInject, null)
                         } else {
+                            // This is the intermediate page. Show the banner.
                             saveCredentialsCheckbox.visibility = View.GONE
+                            fastTrackBannerContainer.visibility = View.VISIBLE
                         }
                     }
                 }
@@ -554,7 +577,10 @@ class MainActivity : AppCompatActivity() {
                             if (justLoggedIn) {
                                 justLoggedIn = false
                                 if (url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL_2) {
-                                    view?.loadUrl(HOME_PAGE_URL)
+                                    val shouldSkipPage = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
+                                    if (shouldSkipPage) {
+                                        view?.loadUrl(HOME_PAGE_URL)
+                                    }
                                 }
                             }
                         }
