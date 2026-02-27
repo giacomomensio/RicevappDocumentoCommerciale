@@ -7,7 +7,7 @@
 git add .
 
 # 2. Commit your changes with a message
-git commit -m "Type text here"
+git commit -m "Type your text here"
 
 # 3. Push your changes to GitHub
 git push origin main
@@ -28,10 +28,10 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.5.2: Ready for public release, new screenshots"
+git commit -m "v1.6.0: Added manual redirect choice after login"
 
 # 3. Create Tag
-git tag v1.5.2
+git tag v1.6.0
 
 # 4. Push Code
 git push origin main
