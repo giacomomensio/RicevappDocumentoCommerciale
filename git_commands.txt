@@ -28,10 +28,10 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.6.0: Added manual redirect choice after login"
+git commit -m "v1.9.0: New multi-tab interface, initial disclaimer popup, and native settings"
 
 # 3. Create Tag
-git tag v1.6.0
+git tag v1.9.0
 
 # 4. Push Code
 git push origin main

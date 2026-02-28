@@ -33,14 +33,11 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
 
 class HomeFragment : Fragment() {
 
-    private lateinit var webView: WebView
+    lateinit var webView: WebView
     private lateinit var saveCredentialsCheckbox: CheckBox
-    private lateinit var disclaimerContainer: View
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var fastTrackBannerContainer: View
     private lateinit var fastTrackButton: Button
@@ -100,12 +97,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private val onBackPressedCallback = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() {
-            webView.goBack()
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -117,14 +108,14 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Prende l'istanza unica dalla MainActivity
+        sharedPreferences = (requireActivity() as MainActivity).sharedPreferences
+
         webView = view.findViewById(R.id.webview)
         saveCredentialsCheckbox = view.findViewById(R.id.save_credentials_checkbox)
-        disclaimerContainer = view.findViewById(R.id.disclaimer_container)
         fastTrackBannerContainer = view.findViewById(R.id.fast_track_banner_container)
         fastTrackButton = view.findViewById(R.id.fast_track_button)
         skipIntermediatePageCheckbox = view.findViewById(R.id.skip_intermediate_page_checkbox)
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
 
         setupApp()
 
@@ -134,7 +125,6 @@ class HomeFragment : Fragment() {
         } else {
             webView.visibility = View.INVISIBLE
             saveCredentialsCheckbox.visibility = View.GONE
-            disclaimerContainer.visibility = View.GONE
             authenticateApp()
         }
     }
@@ -218,8 +208,7 @@ class HomeFragment : Fragment() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
                     if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON || errorCode == BiometricPrompt.ERROR_USER_CANCELED) {
-                        // In fragment, we might want to switch tab back or close activity
-                        requireActivity().finish()
+                        (requireActivity() as MainActivity).resetToStartTab()
                     }
                 }
             })
@@ -267,29 +256,6 @@ class HomeFragment : Fragment() {
         webView.visibility = View.VISIBLE
 
         CookieManager.getInstance().setAcceptCookie(true)
-
-        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-        sharedPreferences = EncryptedSharedPreferences.create(
-            "secret_shared_prefs",
-            masterKeyAlias,
-            requireContext(),
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-
-        if (!sharedPreferences.getBoolean(DISCLAIMER_DISMISSED_KEY, false)) {
-            disclaimerContainer.visibility = View.VISIBLE
-            val disclaimerButton: Button = disclaimerContainer.findViewById(R.id.disclaimer_button)
-            disclaimerButton.setOnClickListener {
-                disclaimerContainer.visibility = View.GONE
-                with(sharedPreferences.edit()) {
-                    putBoolean(DISCLAIMER_DISMISSED_KEY, true)
-                    apply()
-                }
-            }
-        } else {
-            disclaimerContainer.visibility = View.GONE
-        }
 
         saveCredentialsCheckbox.isChecked = sharedPreferences.getBoolean(SHOULD_SAVE_KEY, false)
 
@@ -383,8 +349,8 @@ class HomeFragment : Fragment() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                onBackPressedCallback.isEnabled = view?.canGoBack() ?: false
                 fastTrackBannerContainer.visibility = View.GONE
+                saveCredentialsCheckbox.visibility = View.GONE
 
                 if (isInitialPageLoad) {
                     isInitialPageLoad = false
@@ -400,37 +366,43 @@ class HomeFragment : Fragment() {
 
                 val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
 
-                if (isLoginPageUrl) {
+                if (url != null && url.startsWith("https://ivaservizi.agenziaentrate.gov.it/")) {
                     isLoginPage { onLoginPage ->
                         if (onLoginPage) {
-                            saveCredentialsCheckbox.visibility = View.VISIBLE
-                            val jsToInject = """
-                                (function() {
-                                    setTimeout(function() {
-                                        var viewport = document.querySelector('meta[name="viewport"]');
-                                        var pageContent = document.getElementById('page-content');
-                                        if (window.innerWidth < 768) {
-                                            if (viewport) {
-                                                viewport.setAttribute('content', 'width=768');
+                            if (isLoginPageUrl) {
+                                saveCredentialsCheckbox.visibility = View.VISIBLE
+                                val jsToInject = """
+                                    (function() {
+                                        setTimeout(function() {
+                                            var viewport = document.querySelector('meta[name="viewport"]');
+                                            var pageContent = document.getElementById('page-content');
+                                            if (window.innerWidth < 768) {
+                                                if (viewport) { viewport.setAttribute('content', 'width=768'); }
+                                                if (pageContent) { pageContent.style.zoom = 1.9; }
+                                            } else {
+                                                if (viewport) { viewport.setAttribute('content', 'width=device-width, initial-scale=1.0'); }
+                                                if (pageContent) { pageContent.style.zoom = 1.0; }
                                             }
-                                            if (pageContent) {
-                                                pageContent.style.zoom = 1.9;
-                                            }
-                                        } else {
-                                            if (viewport) {
-                                                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
-                                            }
-                                            if (pageContent) {
-                                                pageContent.style.zoom = 1.0;
-                                            }
-                                        }
-                                    }, 300);
-                                })();
-                            """
-                            view?.evaluateJavascript(jsToInject, null)
+                                        }, 300);
+                                    })();
+                                """
+                                view?.evaluateJavascript(jsToInject, null)
+                            }
+                            autofillCredentials(sharedPreferences)
                         } else {
-                            saveCredentialsCheckbox.visibility = View.GONE
-                            fastTrackBannerContainer.visibility = View.VISIBLE
+                            if (isLoginPageUrl) {
+                                if (justLoggedIn) {
+                                    justLoggedIn = false
+                                    val shouldSkipPage = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
+                                    if (shouldSkipPage) {
+                                        view?.loadUrl(HOME_PAGE_URL)
+                                    } else {
+                                        fastTrackBannerContainer.visibility = View.VISIBLE
+                                    }
+                                } else {
+                                    fastTrackBannerContainer.visibility = View.VISIBLE
+                                }
+                            }
                         }
                     }
                 }
@@ -445,12 +417,10 @@ class HomeFragment : Fragment() {
                                 if (table && targetElement) {
                                     clearInterval(interval);
                                     
-                                    // Fix for horizontal scroll bar
                                     document.documentElement.style.overflowX = 'hidden';
                                     document.body.style.overflowX = 'hidden';
                                     document.body.style.width = '100%';
                                     
-                                    // Existing styles
                                     table.style.marginLeft = '-10px';
                                     table.style.marginRight = '-10px';
                                     const panelBody = table.querySelector('.panel-body');
@@ -568,24 +538,6 @@ class HomeFragment : Fragment() {
                         view?.evaluateJavascript(jsLogoutHandler, null)
                     }
                 }
-
-                if (url != null && url.startsWith("https://ivaservizi.agenziaentrate.gov.it/")) {
-                    isLoginPage { onLoginPage ->
-                        if (onLoginPage) {
-                            autofillCredentials(sharedPreferences)
-                        } else {
-                            if (justLoggedIn) {
-                                justLoggedIn = false
-                                if (url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL_2) {
-                                    val shouldSkipPage = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
-                                    if (shouldSkipPage) {
-                                        view?.loadUrl(HOME_PAGE_URL)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -651,11 +603,6 @@ class HomeFragment : Fragment() {
 
     private fun startApp(url: String? = null) {
         webView.visibility = View.VISIBLE
-        if (!sharedPreferences.getBoolean(DISCLAIMER_DISMISSED_KEY, false)) {
-            disclaimerContainer.visibility = View.VISIBLE
-        } else {
-            disclaimerContainer.visibility = View.GONE
-        }
         webView.loadUrl(url ?: LOGIN_PAGE_URL)
     }
 
@@ -672,7 +619,7 @@ class HomeFragment : Fragment() {
                  if (!uField) { 
                     const iframe = document.getElementsByTagName('iframe')[0]; 
                     if (iframe) { 
-                         try { doc = iframe.contentDocument; } else { return false; }
+                         try { doc = iframe.contentDocument; } catch(e) { return false; }
                     } 
                 } 
                 return !!doc.getElementById('username'); 

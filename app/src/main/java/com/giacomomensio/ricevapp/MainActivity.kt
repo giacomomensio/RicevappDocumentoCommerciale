@@ -2,8 +2,12 @@ package com.giacomomensio.ricevapp
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.widget.Button
+import android.widget.CheckBox
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -15,20 +19,21 @@ import com.google.android.material.color.DynamicColors
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var sharedPreferences: SharedPreferences
+    lateinit var sharedPreferences: SharedPreferences
     private lateinit var bottomNavigation: BottomNavigationView
     
     private val LAST_TAB_KEY = "LAST_TAB_KEY"
+    private val DISCLAIMER_DISMISSED_KEY = "DISCLAIMER_DISMISSED_KEY"
     private var activeFragmentTag: String? = null
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
             val fragmentManager = supportFragmentManager
-            val home = fragmentManager.findFragmentByTag("home") as? HomeFragment
+            val documenti = fragmentManager.findFragmentByTag("documenti") as? HomeFragment
             
-            if (home != null && home.isVisible) {
-                if (home.canWebViewGoBack()) {
-                    home.webViewGoBack()
+            if (documenti != null && documenti.isVisible) {
+                if (documenti.canWebViewGoBack()) {
+                    documenti.webViewGoBack()
                     return
                 }
             }
@@ -74,17 +79,52 @@ class MainActivity : AppCompatActivity() {
             val lastTabId = sharedPreferences.getInt(LAST_TAB_KEY, R.id.nav_settings)
             bottomNavigation.selectedItemId = lastTabId
             navigateToTab(lastTabId)
+            
+            showDisclaimerDialog()
         } else {
             activeFragmentTag = savedInstanceState.getString("ACTIVE_TAG")
         }
     }
 
+    private fun showDisclaimerDialog() {
+        if (sharedPreferences.getBoolean(DISCLAIMER_DISMISSED_KEY, false)) {
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        val inflater = LayoutInflater.from(this)
+        val dialogView = inflater.inflate(R.layout.dialog_disclaimer, null)
+        builder.setView(dialogView)
+
+        val dialog = builder.create()
+
+        val dontShowAgainCheckbox = dialogView.findViewById<CheckBox>(R.id.dont_show_again_checkbox)
+        val btnUnderstand = dialogView.findViewById<Button>(R.id.btn_understand)
+
+        btnUnderstand.setOnClickListener {
+            if (dontShowAgainCheckbox.isChecked) {
+                sharedPreferences.edit().putBoolean(DISCLAIMER_DISMISSED_KEY, true).apply()
+            }
+            dialog.dismiss()
+        }
+
+        // Importante: Rimuoviamo lo sfondo trasparente della finestra del dialogo 
+        // per lasciare che sia la CardView nel layout XML a gestire lo sfondo e i bordi.
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.setCancelable(false)
+        dialog.show()
+    }
+
+    fun resetToStartTab() {
+        bottomNavigation.selectedItemId = R.id.nav_settings
+    }
+
     private fun navigateToTab(itemId: Int) {
         val newTag = when (itemId) {
-            R.id.nav_settings -> "settings"
-            R.id.nav_home -> "home"
-            R.id.nav_info -> "info"
-            else -> "settings"
+            R.id.nav_settings -> "gestione"
+            R.id.nav_home -> "documenti"
+            R.id.nav_info -> "guida"
+            else -> "gestione"
         }
 
         if (activeFragmentTag == newTag) return
@@ -92,12 +132,10 @@ class MainActivity : AppCompatActivity() {
         val fragmentManager = supportFragmentManager
         val transaction = fragmentManager.beginTransaction()
 
-        // 1. Nascondi il frammento attivo precedente (se esiste)
         activeFragmentTag?.let { tag ->
             fragmentManager.findFragmentByTag(tag)?.let { transaction.hide(it) }
         }
 
-        // 2. Cerca il nuovo frammento
         var targetFragment = fragmentManager.findFragmentByTag(newTag)
 
         if (targetFragment == null) {
@@ -124,7 +162,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        val home = supportFragmentManager.findFragmentByTag("home") as? HomeFragment
-        home?.handlePermissionResult(requestCode, grantResults)
+        val documenti = supportFragmentManager.findFragmentByTag("documenti") as? HomeFragment
+        documenti?.handlePermissionResult(requestCode, grantResults)
     }
 }
