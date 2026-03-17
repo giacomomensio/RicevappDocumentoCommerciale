@@ -33,6 +33,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class HomeFragment : Fragment() {
 
@@ -61,7 +62,7 @@ class HomeFragment : Fragment() {
     private val SHOULD_SAVE_KEY = "SHOULD_SAVE_KEY"
     private val DISCLAIMER_DISMISSED_KEY = "DISCLAIMER_DISMISSED_KEY"
     private val SKIP_INTERMEDIATE_PAGE_KEY = "SKIP_INTERMEDIATE_PAGE_KEY"
-    private val HOME_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline/#/home"
+    private val HOME_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline"
     private val LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/web/guest/home"
     private val ALT_LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/home"
     private val ALT_LOGIN_PAGE_URL_2 = "https://ivaservizi.agenziaentrate.gov.it/portale/"
@@ -127,6 +128,54 @@ class HomeFragment : Fragment() {
             saveCredentialsCheckbox.visibility = View.GONE
             authenticateApp()
         }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden) {
+            syncSettings()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        syncSettings()
+    }
+
+    private fun syncSettings() {
+        if (!::sharedPreferences.isInitialized) return
+        
+        val shouldSave = sharedPreferences.getBoolean(SHOULD_SAVE_KEY, false)
+        if (saveCredentialsCheckbox.isChecked != shouldSave) {
+            saveCredentialsCheckbox.isChecked = shouldSave
+        }
+
+        val shouldSkip = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
+        if (skipIntermediatePageCheckbox.isChecked != shouldSkip) {
+            skipIntermediatePageCheckbox.isChecked = shouldSkip
+        }
+
+        // Se il salvataggio è stato disattivato, puliamo i campi della WebView se siamo in pagina login
+        if (!shouldSave) {
+            clearWebViewCredentials()
+        }
+    }
+
+    private fun clearWebViewCredentials() {
+        val jsClear = """ 
+            (function() { 
+                let doc = document; 
+                let uField = doc.getElementById('username'); 
+                if (!uField) {
+                    const iframe = document.getElementsByTagName('iframe')[0]; 
+                    if (iframe) { try { doc = iframe.contentDocument; } catch(e) { return; } } else { return; } 
+                } 
+                if(doc.getElementById('username')) { doc.getElementById('username').value = ''; } 
+                if(doc.getElementById('password')) { doc.getElementById('password').value = ''; } 
+                if(doc.getElementById('pin')) { doc.getElementById('pin').value = ''; } 
+            })(); 
+        """
+        webView.evaluateJavascript(jsClear, null)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -259,16 +308,30 @@ class HomeFragment : Fragment() {
 
         saveCredentialsCheckbox.isChecked = sharedPreferences.getBoolean(SHOULD_SAVE_KEY, false)
 
-        saveCredentialsCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            with(sharedPreferences.edit()) {
-                putBoolean(SHOULD_SAVE_KEY, isChecked)
-                if (!isChecked) {
-                    remove(USERNAME_KEY)
-                    remove(PASSWORD_KEY)
-                    remove(PIN_KEY)
-                    Toast.makeText(requireContext(), "Salvataggio automatico disattivato", Toast.LENGTH_SHORT).show()
-                }
-                apply()
+        saveCredentialsCheckbox.setOnClickListener {
+            val isChecked = (it as CheckBox).isChecked
+            if (!isChecked) {
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Disattiva Salvataggio")
+                    .setMessage("Sei sicuro di voler disattivare il salvataggio automatico? Le credenziali memorizzate verranno rimosse e i campi di login verranno svuotati.")
+                    .setPositiveButton("Disattiva") { _, _ ->
+                        with(sharedPreferences.edit()) {
+                            putBoolean(SHOULD_SAVE_KEY, false)
+                            remove(USERNAME_KEY)
+                            remove(PASSWORD_KEY)
+                            remove(PIN_KEY)
+                            apply()
+                        }
+                        clearWebViewCredentials()
+                        Toast.makeText(requireContext(), "Salvataggio automatico disattivato", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Annulla") { _, _ ->
+                        it.isChecked = true
+                    }
+                    .setCancelable(false)
+                    .show()
+            } else {
+                sharedPreferences.edit().putBoolean(SHOULD_SAVE_KEY, true).apply()
             }
         }
 
@@ -295,7 +358,7 @@ class HomeFragment : Fragment() {
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
-                AlertDialog.Builder(requireContext())
+                MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Conferma Uscita")
                     .setMessage(message)
                     .setPositiveButton("Sì") { _, _ ->
@@ -306,6 +369,7 @@ class HomeFragment : Fragment() {
                         view?.loadUrl("https://ivaservizi.agenziaentrate.gov.it/portale/logout")
                     }
                     .setNegativeButton("No") { _, _ -> result?.cancel() }
+                    .setCancelable(false)
                     .create()
                     .show()
                 return true

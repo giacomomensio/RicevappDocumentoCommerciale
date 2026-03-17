@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 
 class SettingsFragment : Fragment() {
@@ -124,19 +125,37 @@ class SettingsFragment : Fragment() {
 
     private fun setupPreferences() {
         saveCredentialsSwitch.setOnClickListener {
-            val isChecked = (it as MaterialSwitch).isChecked
-            sharedPreferences.edit().putBoolean(SHOULD_SAVE_KEY, isChecked).apply()
+            val switch = it as MaterialSwitch
+            val isChecked = switch.isChecked
+            
             if (!isChecked) {
-                sharedPreferences.edit().remove(USERNAME_KEY).remove(PASSWORD_KEY).remove(PIN_KEY).apply()
-                Toast.makeText(context, "Dati di login rimossi", Toast.LENGTH_SHORT).show()
+                // L'utente sta provando a disattivare
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Disattiva Salvataggio")
+                    .setMessage("Sei sicuro di voler disattivare il salvataggio automatico? Le credenziali memorizzate verranno rimosse e i campi di login verranno svuotati.")
+                    .setPositiveButton("Disattiva") { _, _ ->
+                        sharedPreferences.edit()
+                            .putBoolean(SHOULD_SAVE_KEY, false)
+                            .remove(USERNAME_KEY)
+                            .remove(PASSWORD_KEY)
+                            .remove(PIN_KEY)
+                            .apply()
+                        Toast.makeText(context, "Dati di login rimossi", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Annulla") { _, _ ->
+                        switch.isChecked = true // Ripristina lo stato
+                    }
+                    .setCancelable(false)
+                    .show()
+            } else {
+                sharedPreferences.edit().putBoolean(SHOULD_SAVE_KEY, true).apply()
             }
         }
 
         skipPageSwitch.setOnClickListener {
             val switch = it as MaterialSwitch
             if (!switch.isChecked) {
-                // L'utente sta provando a disattivare
-                AlertDialog.Builder(requireContext())
+                MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Disattiva Salto Pagina")
                     .setMessage("Se disattivi questa opzione, al prossimo login visualizzerai di nuovo la landing page del portale. Potrai riattivarla solo da quella pagina.")
                     .setPositiveButton("Disattiva") { _, _ ->
@@ -145,13 +164,11 @@ class SettingsFragment : Fragment() {
                         Toast.makeText(context, "Redirect automatico disattivato", Toast.LENGTH_SHORT).show()
                     }
                     .setNegativeButton("Annulla") { _, _ ->
-                        switch.isChecked = true // Ripristina lo stato
+                        switch.isChecked = true 
                     }
                     .setCancelable(false)
                     .show()
             } else {
-                // Questo caso in teoria non dovrebbe essere raggiungibile dato che è invisibile se false,
-                // ma per sicurezza lo gestiamo.
                 sharedPreferences.edit().putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, true).apply()
             }
         }
@@ -159,18 +176,24 @@ class SettingsFragment : Fragment() {
 
     private fun setupButtons() {
         clearDataButton.setOnClickListener {
-            AlertDialog.Builder(requireContext())
+            MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Cancellazione Totale")
                 .setMessage("Sei sicuro di voler cancellare tutti i dati salvati, le preferenze e la cache della WebView? Dovrai rifare il login.")
                 .setPositiveButton("Sì, cancella") { _, _ ->
-                    sharedPreferences.edit().clear().apply()
+                    sharedPreferences.edit().clear().commit() 
+                    
                     val cookieManager = CookieManager.getInstance()
                     cookieManager.removeAllCookies(null)
                     cookieManager.flush()
+                    
                     val webViewDummy = WebView(requireContext())
                     webViewDummy.clearCache(true)
                     webViewDummy.clearHistory()
                     webViewDummy.destroy()
+                    
+                    saveCredentialsSwitch.isChecked = false
+                    skipPageSwitch.isChecked = false
+                    skipPageSwitch.isVisible = false
                     
                     Toast.makeText(context, "Tutti i dati sono stati rimossi", Toast.LENGTH_LONG).show()
                     requireActivity().recreate()

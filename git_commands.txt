@@ -28,10 +28,10 @@ git clean -fd
 git add .
 
 # 2. Commit
-git commit -m "v1.9.0: New multi-tab interface, initial disclaimer popup, and native settings"
+git commit -m "v1.9.1: Uniform dialog graphics (Material3), preference synchronization bugfix, and login field cleanup."
 
 # 3. Create Tag
-git tag v1.9.0
+git tag v1.9.1
 
 # 4. Push Code
 git push origin main

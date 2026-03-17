@@ -91,7 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Salto pagina intermedia" />
+                    android:text="Salta pagina intermedia" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -124,7 +124,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="CANCELLA TUTTI I DATI APP"
+                    android:text="Cancella tutti i dati dell'app"
                     app:icon="@android:drawable/ic_menu_delete" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

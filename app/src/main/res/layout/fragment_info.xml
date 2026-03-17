@@ -123,7 +123,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="LEGGI PRIVACY POLICY COMPLETA"
+                    android:text="Leggi la privacy policy completa"
                     app:icon="@android:drawable/ic_menu_info_details" />
 
                 <TextView
