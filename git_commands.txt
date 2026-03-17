@@ -23,18 +23,21 @@ git status
 git restore .
 git clean -fd
 
-## Release Commands (for F-Droid)
-# 1. Add all changes
+## RELEASE PROCEDURE (IMPORTANT FOR F-DROID)
+# To ensure the APK matches the source code hash:
+
+# 1. COMMIT ALL CHANGES
 git add .
+git commit -m "v1.9.2: Uniform dialog graphics, sync bugfixes and F-Droid safety cleanup."
 
-# 2. Commit
-git commit -m "v1.9.1: Uniform dialog graphics (Material3), preference synchronization bugfix, and login field cleanup."
-
-# 3. Create Tag
-git tag v1.9.1
-
-# 4. Push Code
+# 2. CREATE AND PUSH TAG
+git tag v1.9.2
 git push origin main
-
-# 5. Push Tags
 git push origin --tags
+
+# 3. BUILD APK NOW
+# Only now, generate the Signed APK from Android Studio.
+# This ensures the Git Revision embedded in the APK matches the tag.
+
+# 4. UPLOAD TO GITHUB
+# Go to GitHub, create a Release for tag v1.9.2 and upload 'app-release.apk'.
