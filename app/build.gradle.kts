@@ -32,10 +32,15 @@ extensions.configure<ApplicationExtension> {
         applicationId = "com.giacomomensio.ricevapp"
         minSdk = 23
         targetSdk = 35
-        versionCode = 25
-        versionName = "1.9.2"
+        versionCode = 26
+        versionName = "1.9.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
     buildFeatures {

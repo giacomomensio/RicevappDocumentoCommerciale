@@ -28,10 +28,10 @@ git clean -fd
 
 # 1. COMMIT ALL CHANGES
 git add .
-git commit -m "v1.9.2: Uniform dialog graphics, sync bugfixes and F-Droid safety cleanup."
+git commit -m "v1.9.3: Disable DependencyInfoBlock for F-Droid compliance and final sync bugfixes."
 
 # 2. CREATE AND PUSH TAG
-git tag v1.9.2
+git tag v1.9.3
 git push origin main
 git push origin --tags
 
@@ -40,4 +40,4 @@ git push origin --tags
 # This ensures the Git Revision embedded in the APK matches the tag.
 
 # 4. UPLOAD TO GITHUB
-# Go to GitHub, create a Release for tag v1.9.2 and upload 'app-release.apk'.
+# Go to GitHub, create a Release for tag v1.9.3 and upload 'app-release.apk'.
