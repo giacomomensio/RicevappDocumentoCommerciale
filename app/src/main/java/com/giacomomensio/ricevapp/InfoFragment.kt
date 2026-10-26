@@ -32,7 +32,7 @@ class InfoFragment : Fragment() {
             val version = pInfo.versionName
             versionText.text = "Versione: $version"
         } catch (e: Exception) {
-            versionText.text = "Versione: 1.9.4"
+            versionText.text = "Versione: 1.9.5"
         }
 
         privacyButton.setOnClickListener {

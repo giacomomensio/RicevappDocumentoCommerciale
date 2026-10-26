@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 
 extensions.configure<ApplicationExtension> {
     namespace = "com.giacomomensio.ricevapp"
-    compileSdk = 35
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -31,9 +31,9 @@ extensions.configure<ApplicationExtension> {
     defaultConfig {
         applicationId = "com.giacomomensio.ricevapp"
         minSdk = 23
-        targetSdk = 35
-        versionCode = 27
-        versionName = "1.9.4"
+        targetSdk = 36
+        versionCode = 28
+        versionName = "1.9.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

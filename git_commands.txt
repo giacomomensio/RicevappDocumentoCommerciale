@@ -28,10 +28,10 @@ git clean -fd
 
 # 1. COMMIT ALL CHANGES
 git add .
-git commit -m "v1.9.4: Adapt to the new Agenzia delle Entrate login page and fix credentials autofill."
+git commit -m "v1.9.5: Update target SDK to 36 and fix credentials autofill for Agenzia delle Entrate login page."
 
 # 2. CREATE AND PUSH TAG
-git tag v1.9.4
+git tag v1.9.5
 git push origin main
 git push origin --tags
 
@@ -40,4 +40,4 @@ git push origin --tags
 # This ensures the Git Revision embedded in the APK matches the tag.
 
 # 4. UPLOAD TO GITHUB
-# Go to GitHub, create a Release for tag v1.9.4 and upload 'app-release.apk'.
+# Go to GitHub, create a Release for tag v1.9.5 and upload 'app-release.apk'.
