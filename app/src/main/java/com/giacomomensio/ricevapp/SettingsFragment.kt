@@ -29,12 +29,10 @@ class SettingsFragment : Fragment() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var securityStatusText: TextView
     private lateinit var saveCredentialsSwitch: MaterialSwitch
-    private lateinit var skipPageSwitch: MaterialSwitch
     private lateinit var clearDataButton: Button
     private lateinit var goToDocumentsButton: Button
 
     private val SHOULD_SAVE_KEY = "SHOULD_SAVE_KEY"
-    private val SKIP_INTERMEDIATE_PAGE_KEY = "SKIP_INTERMEDIATE_PAGE_KEY"
     private val USERNAME_KEY = "USERNAME_KEY"
     private val PASSWORD_KEY = "PASSWORD_KEY"
     private val PIN_KEY = "PIN_KEY"
@@ -61,7 +59,6 @@ class SettingsFragment : Fragment() {
 
         securityStatusText = view.findViewById(R.id.security_status_text)
         saveCredentialsSwitch = view.findViewById(R.id.save_credentials_switch)
-        skipPageSwitch = view.findViewById(R.id.skip_page_switch)
         clearDataButton = view.findViewById(R.id.clear_data_button)
         goToDocumentsButton = view.findViewById(R.id.go_to_documents_button)
 
@@ -89,10 +86,6 @@ class SettingsFragment : Fragment() {
         
         val isSaveActive = sharedPreferences.getBoolean(SHOULD_SAVE_KEY, false)
         saveCredentialsSwitch.isChecked = isSaveActive
-        
-        val isSkipActive = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
-        skipPageSwitch.isChecked = isSkipActive
-        skipPageSwitch.isVisible = isSkipActive
         
         setupSecurityStatus()
     }
@@ -151,27 +144,6 @@ class SettingsFragment : Fragment() {
                 sharedPreferences.edit().putBoolean(SHOULD_SAVE_KEY, true).apply()
             }
         }
-
-        skipPageSwitch.setOnClickListener {
-            val switch = it as MaterialSwitch
-            if (!switch.isChecked) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Disattiva Salto Pagina")
-                    .setMessage("Se disattivi questa opzione, al prossimo login visualizzerai di nuovo la landing page del portale. Potrai riattivarla solo da quella pagina.")
-                    .setPositiveButton("Disattiva") { _, _ ->
-                        sharedPreferences.edit().putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false).apply()
-                        switch.isVisible = false
-                        Toast.makeText(context, "Redirect automatico disattivato", Toast.LENGTH_SHORT).show()
-                    }
-                    .setNegativeButton("Annulla") { _, _ ->
-                        switch.isChecked = true 
-                    }
-                    .setCancelable(false)
-                    .show()
-            } else {
-                sharedPreferences.edit().putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, true).apply()
-            }
-        }
     }
 
     private fun setupButtons() {
@@ -192,8 +164,6 @@ class SettingsFragment : Fragment() {
                     webViewDummy.destroy()
                     
                     saveCredentialsSwitch.isChecked = false
-                    skipPageSwitch.isChecked = false
-                    skipPageSwitch.isVisible = false
                     
                     Toast.makeText(context, "Tutti i dati sono stati rimossi", Toast.LENGTH_LONG).show()
                     requireActivity().recreate()

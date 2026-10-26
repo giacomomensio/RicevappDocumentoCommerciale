@@ -24,9 +24,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -42,10 +42,8 @@ class HomeFragment : Fragment() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var fastTrackBannerContainer: View
     private lateinit var fastTrackButton: Button
-    private lateinit var skipIntermediatePageCheckbox: CheckBox
 
     private var justLoggedIn = false
-    private var isInitialPageLoad = true
     private var isAuthenticated = false
 
     private var downloadUrl: String? = null
@@ -61,9 +59,8 @@ class HomeFragment : Fragment() {
     private val PIN_KEY = "PIN_KEY"
     private val SHOULD_SAVE_KEY = "SHOULD_SAVE_KEY"
     private val DISCLAIMER_DISMISSED_KEY = "DISCLAIMER_DISMISSED_KEY"
-    private val SKIP_INTERMEDIATE_PAGE_KEY = "SKIP_INTERMEDIATE_PAGE_KEY"
     private val HOME_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline"
-    private val LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/web/guest/home"
+    private val LOGIN_PAGE_URL = "https://iampe.agenziaentrate.gov.it/sam/UI/Login?realm=/agenziaentrate&goto=https%3A%2F%2Fportale.agenziaentrate.gov.it%3A443%2FPortaleWeb%2Fhome%3Fto%3DFATBTB"
     private val ALT_LOGIN_PAGE_URL = "https://ivaservizi.agenziaentrate.gov.it/portale/home"
     private val ALT_LOGIN_PAGE_URL_2 = "https://ivaservizi.agenziaentrate.gov.it/portale/"
     private val LOGIN_INFO_DISMISSED_KEY = "LOGIN_INFO_DISMISSED_KEY"
@@ -116,7 +113,6 @@ class HomeFragment : Fragment() {
         saveCredentialsCheckbox = view.findViewById(R.id.save_credentials_checkbox)
         fastTrackBannerContainer = view.findViewById(R.id.fast_track_banner_container)
         fastTrackButton = view.findViewById(R.id.fast_track_button)
-        skipIntermediatePageCheckbox = view.findViewById(R.id.skip_intermediate_page_checkbox)
 
         setupApp()
 
@@ -150,11 +146,6 @@ class HomeFragment : Fragment() {
             saveCredentialsCheckbox.isChecked = shouldSave
         }
 
-        val shouldSkip = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
-        if (skipIntermediatePageCheckbox.isChecked != shouldSkip) {
-            skipIntermediatePageCheckbox.isChecked = shouldSkip
-        }
-
         // Se il salvataggio è stato disattivato, puliamo i campi della WebView se siamo in pagina login
         if (!shouldSave) {
             clearWebViewCredentials()
@@ -165,17 +156,45 @@ class HomeFragment : Fragment() {
         val jsClear = """ 
             (function() { 
                 let doc = document; 
-                let uField = doc.getElementById('username'); 
-                if (!uField) {
-                    const iframe = document.getElementsByTagName('iframe')[0]; 
-                    if (iframe) { try { doc = iframe.contentDocument; } catch(e) { return; } } else { return; } 
+                let clearInDoc = function(d) {
+                    if (!d) return;
+                    let u = d.getElementById('username-fo-ent') || d.getElementById('username') || d.querySelector("input[name='IDToken1']") || d.getElementById('username-sister');
+                    let p = d.getElementById('password-fo-ent-1') || d.getElementById('password') || d.querySelector("input[name='IDToken2']") || d.getElementById('password-fo-sist');
+                    let pin = d.getElementById('pin-fo-ent') || d.getElementById('pin') || d.querySelector("input[name='IDToken3']");
+                    if (u) { u.value = ''; u.removeAttribute('list'); }
+                    if (p) { p.value = ''; p.removeAttribute('list'); }
+                    if (pin) { pin.value = ''; pin.removeAttribute('list'); }
+
+                    ['ricevapp-u-list', 'ricevapp-p-list', 'ricevapp-pin-list'].forEach(function(id) {
+                        let dl = d.getElementById(id);
+                        if (dl && dl.parentNode) dl.parentNode.removeChild(dl);
+                    });
+                };
+                clearInDoc(doc);
+                const iframe = doc.getElementsByTagName('iframe')[0]; 
+                if (iframe) { 
+                    try { clearInDoc(iframe.contentDocument); } catch(e) {} 
                 } 
-                if(doc.getElementById('username')) { doc.getElementById('username').value = ''; } 
-                if(doc.getElementById('password')) { doc.getElementById('password').value = ''; } 
-                if(doc.getElementById('pin')) { doc.getElementById('pin').value = ''; } 
             })(); 
         """
         webView.evaluateJavascript(jsClear, null)
+    }
+
+    private fun isOfficialFisconlineLoginPage(url: String?): Boolean {
+        if (url == null) return false
+        if (url.contains("sp.agenziaentrate.gov.it") || 
+            url.contains("servizicie.interno.gov.it") ||
+            url.contains("spid") ||
+            url.contains("poste") ||
+            url.contains("aruba") ||
+            url.contains("namirial") ||
+            url.contains("sielte") ||
+            url.contains("lepida") ||
+            url.contains("infocert") ||
+            url.contains("tim.it")) {
+            return false
+        }
+        return url == LOGIN_PAGE_URL || url.contains("iampe.agenziaentrate.gov.it") || url.startsWith(ALT_LOGIN_PAGE_URL) || url == ALT_LOGIN_PAGE_URL_2
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -192,25 +211,10 @@ class HomeFragment : Fragment() {
         val js = if (isLoginPageUrl) {
             """
             (function() {
-                setTimeout(function() {
-                    var viewport = document.querySelector('meta[name="viewport"]');
-                    var pageContent = document.getElementById('page-content');
-                    if (window.innerWidth < 768) {
-                        if (viewport) {
-                            viewport.setAttribute('content', 'width=768');
-                        }
-                        if (pageContent) {
-                            pageContent.style.zoom = 1.9;
-                        }
-                    } else {
-                        if (viewport) {
-                            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
-                        }
-                        if (pageContent) {
-                            pageContent.style.zoom = 1.0;
-                        }
-                    }
-                }, 300);
+                var viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                }
             })();
             """
         } else {
@@ -304,7 +308,9 @@ class HomeFragment : Fragment() {
     private fun setupApp() {
         webView.visibility = View.VISIBLE
 
-        CookieManager.getInstance().setAcceptCookie(true)
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        cookieManager.setAcceptThirdPartyCookies(webView, true)
 
         saveCredentialsCheckbox.isChecked = sharedPreferences.getBoolean(SHOULD_SAVE_KEY, false)
 
@@ -313,7 +319,7 @@ class HomeFragment : Fragment() {
             if (!isChecked) {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Disattiva Salvataggio")
-                    .setMessage("Sei sicuro di voler disattivare il salvataggio automatico? Le credenziali memorizzate verranno rimosse e i campi di login verranno svuotati.")
+                    .setMessage("Sei sicuro di voler disattivare il salvataggio automatico? Le credenziali memorizzate verranno rimosse.")
                     .setPositiveButton("Disattiva") { _, _ ->
                         with(sharedPreferences.edit()) {
                             putBoolean(SHOULD_SAVE_KEY, false)
@@ -335,19 +341,12 @@ class HomeFragment : Fragment() {
             }
         }
 
-        skipIntermediatePageCheckbox.isChecked = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
-        skipIntermediatePageCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            with(sharedPreferences.edit()) {
-                putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, isChecked)
-                apply()
-            }
-        }
-
         fastTrackButton.setOnClickListener {
             webView.loadUrl(HOME_PAGE_URL)
         }
 
         webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
         webView.settings.loadWithOverviewMode = true
         webView.settings.useWideViewPort = true
         webView.addJavascriptInterface(WebAppInterface(), "Android")
@@ -365,8 +364,7 @@ class HomeFragment : Fragment() {
                         result?.confirm()
                         CookieManager.getInstance().removeAllCookies(null)
                         CookieManager.getInstance().flush()
-                        sharedPreferences.edit().putBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false).apply()
-                        view?.loadUrl("https://ivaservizi.agenziaentrate.gov.it/portale/logout")
+                        view?.loadUrl("https://ivaservizi.agenziaentrate.gov.it/ser/documenticommercialionline/nonauth.html")
                     }
                     .setNegativeButton("No") { _, _ -> result?.cancel() }
                     .setCancelable(false)
@@ -380,14 +378,25 @@ class HomeFragment : Fragment() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url
                 if (url != null) {
+                    val scheme = url.scheme
+                    if (scheme != "http" && scheme != "https") {
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, url)
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                        }
+                        return true
+                    }
+
                     val host = url.host
                     
                     val allowedDomains = listOf(
-                        "ivaservizi.agenziaentrate.gov.it",
-                        "idserver.servizicie.interno.gov.it",
+                        "agenziaentrate.gov.it",
+                        "servizicie.interno.gov.it",
+                        "spid.gov.it",
                         "sogei.it", "lepida.it", "register.it", "namirial.it", 
                         "intesigroup.com", "teamsystem.com", "infocamere.it", 
-                        "infocert.it", "poste.it", "aruba.it", "sieltecloud.it", 
+                        "infocert.it", "poste.it", "aruba.it", "sielte.it", "sieltecloud.it", 
                         "eht.eu", "tim.it"
                     )
 
@@ -416,62 +425,50 @@ class HomeFragment : Fragment() {
                 fastTrackBannerContainer.visibility = View.GONE
                 saveCredentialsCheckbox.visibility = View.GONE
 
-                if (isInitialPageLoad) {
-                    isInitialPageLoad = false
-                    val isPortalPage = url == LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL || url == ALT_LOGIN_PAGE_URL_2
-                    if (isPortalPage) {
-                        isLoginPage { onLoginPage ->
-                            if (!onLoginPage) {
-                                view?.loadUrl(HOME_PAGE_URL)
-                            }
-                        }
-                    }
-                }
+                if (url == null) return
 
-                val isLoginPageUrl = url == LOGIN_PAGE_URL || (url != null && url.startsWith(ALT_LOGIN_PAGE_URL)) || url == ALT_LOGIN_PAGE_URL_2
+                val isLoginPageUrl = url == LOGIN_PAGE_URL ||
+                        url.contains("iampe.agenziaentrate.gov.it") ||
+                        url.startsWith(ALT_LOGIN_PAGE_URL) ||
+                        url == ALT_LOGIN_PAGE_URL_2
 
-                if (url != null && url.startsWith("https://ivaservizi.agenziaentrate.gov.it/")) {
+                val isHomePage = url == HOME_PAGE_URL || url.startsWith(HOME_PAGE_URL) || url.contains("/documenticommercialionline")
+
+                val isAnagrafeAdELogin = isOfficialFisconlineLoginPage(url)
+
+                if (isHomePage) {
+                    fastTrackBannerContainer.visibility = View.GONE
+                    saveCredentialsCheckbox.visibility = View.GONE
+                } else {
                     isLoginPage { onLoginPage ->
-                        if (onLoginPage) {
-                            if (isLoginPageUrl) {
-                                saveCredentialsCheckbox.visibility = View.VISIBLE
-                                val jsToInject = """
-                                    (function() {
-                                        setTimeout(function() {
-                                            var viewport = document.querySelector('meta[name="viewport"]');
-                                            var pageContent = document.getElementById('page-content');
-                                            if (window.innerWidth < 768) {
-                                                if (viewport) { viewport.setAttribute('content', 'width=768'); }
-                                                if (pageContent) { pageContent.style.zoom = 1.9; }
-                                            } else {
-                                                if (viewport) { viewport.setAttribute('content', 'width=device-width, initial-scale=1.0'); }
-                                                if (pageContent) { pageContent.style.zoom = 1.0; }
-                                            }
-                                        }, 300);
-                                    })();
-                                """
-                                view?.evaluateJavascript(jsToInject, null)
+                        val isLogin = isLoginPageUrl || onLoginPage
+                        if (isLogin) {
+                            fastTrackBannerContainer.visibility = View.GONE
+                            saveCredentialsCheckbox.visibility = if (isAnagrafeAdELogin) View.VISIBLE else View.GONE
+
+                            if (isAnagrafeAdELogin) {
+                                autofillCredentials(sharedPreferences)
                             }
-                            autofillCredentials(sharedPreferences)
                         } else {
-                            if (isLoginPageUrl) {
-                                if (justLoggedIn) {
-                                    justLoggedIn = false
-                                    val shouldSkipPage = sharedPreferences.getBoolean(SKIP_INTERMEDIATE_PAGE_KEY, false)
-                                    if (shouldSkipPage) {
-                                        view?.loadUrl(HOME_PAGE_URL)
-                                    } else {
-                                        fastTrackBannerContainer.visibility = View.VISIBLE
-                                    }
-                                } else {
-                                    fastTrackBannerContainer.visibility = View.VISIBLE
-                                }
-                            }
+                            val isOfficialAdEPage = url.contains("agenziaentrate.gov.it") &&
+                                    !url.contains("sp.agenziaentrate.gov.it") &&
+                                    !url.contains("servizicie.interno.gov.it") &&
+                                    !url.contains("spid") &&
+                                    !url.contains("poste") &&
+                                    !url.contains("aruba") &&
+                                    !url.contains("namirial") &&
+                                    !url.contains("sielte") &&
+                                    !url.contains("lepida") &&
+                                    !url.contains("infocert") &&
+                                    !url.contains("tim.it")
+
+                            fastTrackBannerContainer.visibility = if (isOfficialAdEPage) View.VISIBLE else View.GONE
+                            saveCredentialsCheckbox.visibility = View.GONE
                         }
                     }
                 }
 
-                if (url != null && url.contains("/generazione/wizard2")) {
+                if (url.contains("/generazione/wizard2")) {
                     val wizard2Js = """
                         (function() {
                             const interval = setInterval(function() {
@@ -528,44 +525,50 @@ class HomeFragment : Fragment() {
                     view?.evaluateJavascript(wizard2Js, null)
                 }
 
-                if (isLoginPageUrl) {
+                if (isAnagrafeAdELogin) {
                     val jsLoginButtonListener = """ 
                         (function() { 
-                            let doc = document; 
-                            const iframe = doc.getElementsByTagName('iframe')[0]; 
-                            if (iframe) { 
-                                try { doc = iframe.contentDocument; } catch(e) { return; } 
-                            } 
-                            
-                            if (doc.ricevappListenerAttached) return;
-                            doc.ricevappListenerAttached = true;
-                            
-                            doc.addEventListener('click', function(e) { 
-                                let target = e.target;
-                                while (target && target !== doc) {
-                                    if (target.id === 'login-button') {
-                                        const uField = doc.getElementById('username'); 
-                                        const pField = doc.getElementById('password'); 
-                                        const pinField = doc.getElementById('pin'); 
-                                        if (uField && pField && pinField) { 
-                                            Android.onLoginButtonClick(uField.value, pField.value, pinField.value);
-                                        } 
-                                        break;
-                                    }
-                                    const text = (target.textContent || target.innerText || '').toLowerCase();
-                                    if (text.includes('spid') || text.includes('cie')) {
-                                        Android.onExternalLoginClick();
-                                        break;
-                                    }
-                                    target = target.parentNode;
-                                }
-                            }); 
+                            let attachSaveListener = function(doc) {
+                                if (!doc || doc.ricevappSaveListenerAttached) return;
+                                doc.ricevappSaveListenerAttached = true;
+                                
+                                doc.addEventListener('click', function(e) { 
+                                    try {
+                                        let target = e.target;
+                                        if (!target) return;
+                                        let elem = (target.nodeType === 3) ? target.parentElement : target;
+                                        if (!elem) return;
+
+                                        let btn = elem.closest ? elem.closest("#login-button, button[type='submit'], input[type='submit'], .btn-primary") : null;
+                                        if (btn) {
+                                            let uField = doc.getElementById('username-fo-ent') || doc.getElementById('username') || doc.querySelector("input[name='IDToken1']") || doc.getElementById('username-sister');
+                                            let pField = doc.getElementById('password-fo-ent-1') || doc.getElementById('password') || doc.querySelector("input[name='IDToken2']") || doc.getElementById('password-fo-sist');
+                                            let pinField = doc.getElementById('pin-fo-ent') || doc.getElementById('pin') || doc.querySelector("input[name='IDToken3']");
+                                            if (uField && pField) { 
+                                                let uVal = uField.value;
+                                                let pVal = pField.value;
+                                                let pinVal = pinField ? pinField.value : '';
+                                                if (uVal && pVal) {
+                                                    Android.onLoginButtonClick(uVal, pVal, pinVal);
+                                                }
+                                            } 
+                                        }
+                                    } catch(err) {}
+                                }); 
+                            };
+
+                            attachSaveListener(document);
+                            const iframe = document.getElementsByTagName('iframe')[0];
+                            if (iframe) {
+                                try { attachSaveListener(iframe.contentDocument); } catch(e) {}
+                            }
                         })(); 
                     """
                     view?.evaluateJavascript(jsLoginButtonListener, null)
-                } else {
-                    if (url != null && url.contains("/scelta-utenza-lavoro")) {
-                        val jsLogoutHandler = """ 
+                }
+
+                if (url.contains("/scelta-utenza-lavoro")) {
+                    val jsLogoutHandler = """ 
                         (function() { 
                             if (document.body.hasAttribute('data-logout-listener')) return; 
                             document.body.setAttribute('data-logout-listener', 'true'); 
@@ -599,8 +602,7 @@ class HomeFragment : Fragment() {
                             }, true); 
                         })(); 
                     """
-                        view?.evaluateJavascript(jsLogoutHandler, null)
-                    }
+                    view?.evaluateJavascript(jsLogoutHandler, null)
                 }
             }
         }
@@ -667,7 +669,7 @@ class HomeFragment : Fragment() {
 
     private fun startApp(url: String? = null) {
         webView.visibility = View.VISIBLE
-        webView.loadUrl(url ?: LOGIN_PAGE_URL)
+        webView.loadUrl(url ?: HOME_PAGE_URL)
     }
 
     override fun onStop() {
@@ -679,14 +681,18 @@ class HomeFragment : Fragment() {
         val jsCheckLogin = """ 
             (function() { 
                 let doc = document; 
-                let uField = doc.getElementById('username'); 
-                 if (!uField) { 
-                    const iframe = document.getElementsByTagName('iframe')[0]; 
+                let findU = function(d) {
+                    return d.getElementById('username-fo-ent') || d.getElementById('username') || d.querySelector("input[name='IDToken1']") || d.getElementById('username-sister') || d.querySelector("a[href='#tab-4']");
+                };
+                let uField = findU(doc);
+                if (!uField) { 
+                    const iframe = doc.getElementsByTagName('iframe')[0]; 
                     if (iframe) { 
-                         try { doc = iframe.contentDocument; } catch(e) { return false; }
+                        try { doc = iframe.contentDocument; } catch(e) { return false; }
+                        if (doc) uField = findU(doc);
                     } 
                 } 
-                return !!doc.getElementById('username'); 
+                return !!uField; 
             })();
         """
         webView.evaluateJavascript(jsCheckLogin) { result ->
@@ -695,22 +701,82 @@ class HomeFragment : Fragment() {
     }
 
     private fun autofillCredentials(sharedPreferences: SharedPreferences) {
+        val shouldSave = sharedPreferences.getBoolean(SHOULD_SAVE_KEY, false)
+        if (!shouldSave) {
+            clearWebViewCredentials()
+            return
+        }
+
         val savedUsername = sharedPreferences.getString(USERNAME_KEY, "") ?: ""
         val savedPassword = sharedPreferences.getString(PASSWORD_KEY, "") ?: ""
         val savedPin = sharedPreferences.getString(PIN_KEY, "") ?: ""
 
         if (savedUsername.isNotBlank() && savedPassword.isNotBlank() && savedPin.isNotBlank()) {
+            val jsonUsername = org.json.JSONObject.quote(savedUsername)
+            val jsonPassword = org.json.JSONObject.quote(savedPassword)
+            val jsonPin = org.json.JSONObject.quote(savedPin)
+
             val jsSetCredentials = """ 
                 (function() { 
-                    let doc = document; 
-                    let uField = doc.getElementById('username'); 
-                    if (!uField) {
-                        const iframe = document.getElementsByTagName('iframe')[0]; 
-                        if (iframe) { doc = iframe.contentDocument; } else { return; } 
-                    } 
-                    if(doc.getElementById('username')) { doc.getElementById('username').value = '$savedUsername'; } 
-                    if(doc.getElementById('password')) { doc.getElementById('password').value = '$savedPassword'; } 
-                    if(doc.getElementById('pin')) { doc.getElementById('pin').value = '$savedPin'; } 
+                    let setupTab4Fill = function(doc) {
+                        if (!doc || doc.ricevappTab4FillDone) return;
+                        doc.ricevappTab4FillDone = true;
+
+                        let win = doc.defaultView || window;
+
+                        let setVal = function(el, val) {
+                            if (!el) return;
+                            try {
+                                let prototype = win.HTMLInputElement ? win.HTMLInputElement.prototype : Object.getPrototypeOf(el);
+                                let descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+                                if (descriptor && descriptor.set) {
+                                    descriptor.set.call(el, val);
+                                } else {
+                                    el.value = val;
+                                }
+                            } catch(e) {
+                                el.value = val;
+                            }
+                            try {
+                                let EventClass = win.Event || Event;
+                                el.dispatchEvent(new EventClass('input', { bubbles: true }));
+                                el.dispatchEvent(new EventClass('change', { bubbles: true }));
+                            } catch(e) {}
+                        };
+
+                        let fillFields = function() {
+                            let u = doc.getElementById('username-fo-ent') || doc.getElementById('username') || doc.querySelector("input[name='IDToken1']") || doc.getElementById('username-sister');
+                            let p = doc.getElementById('password-fo-ent-1') || doc.getElementById('password') || doc.querySelector("input[name='IDToken2']") || doc.getElementById('password-fo-sist');
+                            let pin = doc.getElementById('pin-fo-ent') || doc.getElementById('pin') || doc.querySelector("input[name='IDToken3']");
+
+                            if (u) setVal(u, $jsonUsername);
+                            if (p) setVal(p, $jsonPassword);
+                            if (pin) setVal(pin, $jsonPin);
+                        };
+
+                        let tab4Pane = doc.getElementById('tab-4');
+                        if (tab4Pane && (tab4Pane.classList.contains('active') || tab4Pane.classList.contains('show'))) {
+                            fillFields();
+                        }
+
+                        doc.addEventListener('click', function(e) {
+                            let target = e.target;
+                            if (!target) return;
+                            let elem = (target.nodeType === 3) ? target.parentElement : target;
+                            if (!elem) return;
+
+                            let tabLink = elem.closest ? elem.closest("a[href='#tab-4']") : null;
+                            if (tabLink) {
+                                setTimeout(fillFields, 150);
+                            }
+                        });
+                    };
+
+                    setupTab4Fill(document);
+                    const iframe = document.getElementsByTagName('iframe')[0];
+                    if (iframe) {
+                        try { setupTab4Fill(iframe.contentDocument); } catch(e) {}
+                    }
                 })(); 
             """
             webView.post { webView.evaluateJavascript(jsSetCredentials, null) }

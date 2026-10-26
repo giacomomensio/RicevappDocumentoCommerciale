@@ -46,37 +46,23 @@
                 android:id="@+id/fast_track_text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Sei sulla pagina intermedia del portale."
+                android:text="Sei su un'altra pagina del portale"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/fast_track_button"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/skip_intermediate_page_checkbox" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <Button
                 android:id="@+id/fast_track_button"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.Material3.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="VAI A DOCUMENTO COMMERCIALE"
-                android:textColor="?attr/colorPrimary"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/skip_intermediate_page_checkbox"/>
-
-            <com.google.android.material.checkbox.MaterialCheckBox
-                android:id="@+id/skip_intermediate_page_checkbox"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Salta sempre questa pagina dopo il login."
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/fast_track_button"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

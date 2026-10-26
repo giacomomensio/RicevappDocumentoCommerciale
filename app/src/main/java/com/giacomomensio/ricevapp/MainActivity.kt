@@ -38,8 +38,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             
-            if (bottomNavigation.selectedItemId != R.id.nav_settings) {
-                bottomNavigation.selectedItemId = R.id.nav_settings
+            if (bottomNavigation.selectedItemId != R.id.nav_home) {
+                bottomNavigation.selectedItemId = R.id.nav_home
             } else {
                 finish()
             }
@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (savedInstanceState == null) {
-            val lastTabId = sharedPreferences.getInt(LAST_TAB_KEY, R.id.nav_settings)
+            val lastTabId = sharedPreferences.getInt(LAST_TAB_KEY, R.id.nav_home)
             bottomNavigation.selectedItemId = lastTabId
             navigateToTab(lastTabId)
             
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun resetToStartTab() {
-        bottomNavigation.selectedItemId = R.id.nav_settings
+        bottomNavigation.selectedItemId = R.id.nav_home
     }
 
     private fun navigateToTab(itemId: Int) {

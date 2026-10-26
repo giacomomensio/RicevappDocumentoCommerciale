@@ -85,13 +85,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Salva credenziali Fisconline/Entratel" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/skip_page_switch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Salta pagina intermedia" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
